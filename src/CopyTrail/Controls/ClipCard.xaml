@@ -1,0 +1,162 @@
+﻿<UserControl x:Class="CopyTrail.Controls.ClipCard"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:CopyTrail.Controls"
+             xmlns:converters="clr-namespace:CopyTrail.Converters"
+             Width="210" Cursor="Hand">
+
+    <UserControl.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
+    <!-- Outer border: shadow + rounded card -->
+    <Border x:Name="CardBorder"
+            CornerRadius="12"
+            BorderThickness="1.5"
+            BorderBrush="#E5E7EB"
+            Background="White"
+            Margin="0,0,0,0">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="14" Direction="270"
+                              ShadowDepth="3" Opacity="0.08"
+                              Color="#000000" />
+        </Border.Effect>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <!-- Source header -->
+                <RowDefinition Height="46" />
+                <!-- Preview area -->
+                <RowDefinition Height="*" />
+                <!-- Card footer -->
+                <RowDefinition Height="38" />
+            </Grid.RowDefinitions>
+
+            <!-- Row 0: Source header with soft accent tint -->
+            <Border Grid.Row="0"
+                    Background="{Binding SoftAccentBrush}"
+                    CornerRadius="12,12,0,0"
+                    Padding="12,0,10,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Source badge (icon circle + app name) -->
+                    <controls:SourceBadge Grid.Column="0"
+                                          Source="{Binding Source}"
+                                          VerticalAlignment="Center" />
+
+                    <!-- Content kind badge (pill) -->
+                    <Border Grid.Column="1"
+                            Background="{Binding BadgeBackgroundBrush}"
+                            CornerRadius="10"
+                            Padding="7,3,7,3"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="{Binding ContentKind}"
+                                   FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{Binding BadgeForegroundBrush}" />
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Accent left-edge bar -->
+            <Rectangle Grid.Row="1" Grid.RowSpan="2"
+                       Width="3" HorizontalAlignment="Left"
+                       Fill="{Binding AccentBrush}"
+                       Opacity="0.7" />
+
+            <!-- Row 1: Content preview — image or text depending on kind -->
+            <Grid Grid.Row="1">
+
+                <!-- Image thumbnail (Image / Screenshot kinds) -->
+                <Border Padding="12,10,12,6"
+                        Visibility="{Binding IsImageCard, Converter={StaticResource BoolToVis}}">
+                    <Image Source="{Binding ThumbnailPath}"
+                           MaxHeight="110"
+                           Stretch="Uniform"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center" />
+                </Border>
+
+                <!-- Text preview (all other kinds) -->
+                <Border Padding="14,12,12,8">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsImageCard}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock Text="{Binding Preview}"
+                               FontSize="12.5"
+                               Foreground="#1F2937"
+                               TextWrapping="Wrap"
+                               TextTrimming="CharacterEllipsis"
+                               LineHeight="18"
+                               MaxHeight="155"
+                               FontFamily="Consolas, Segoe UI, sans-serif" />
+                </Border>
+
+            </Grid>
+
+            <!-- Row 2: Footer (timestamp, copy count, pin) -->
+            <Border Grid.Row="2"
+                    Background="#F8FAFC"
+                    CornerRadius="0,0,12,12"
+                    BorderThickness="0,1,0,0"
+                    BorderBrush="#F1F5F9"
+                    Padding="14,0,10,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Left: timestamp + copy count -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal"
+                                VerticalAlignment="Center">
+                        <TextBlock Text="{Binding CopiedAt}"
+                                   FontSize="11" Foreground="#9CA3AF"
+                                   ToolTip="{Binding CopiedAtAbsolute}"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Margin="6,0,0,0"
+                                   FontSize="11" Foreground="#9CA3AF"
+                                   VerticalAlignment="Center"
+                                   Visibility="{Binding ShowCopyCount, Converter={StaticResource BoolToVis}}">
+                            <Run Text="· " /><Run Text="{Binding CopyCount}" /><Run Text="×" />
+                        </TextBlock>
+                    </StackPanel>
+
+                    <!-- Right: pin + menu buttons -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                VerticalAlignment="Center">
+                        <Button x:Name="PinButton"
+                                Content="⚑"
+                                FontSize="13"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="#CBD5E1"
+                                Padding="4,0"
+                                Cursor="Hand"
+                                ToolTip="Pin item" />
+                        <Button x:Name="MenuButton"
+                                Content="⋯"
+                                FontSize="14"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="#CBD5E1"
+                                Padding="4,0"
+                                Cursor="Hand"
+                                ToolTip="More options"
+                                Click="MenuButton_Click" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+        </Grid>
+    </Border>
+</UserControl>
