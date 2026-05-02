@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CopyTrail — Refined Mockup</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: #0f0f11;
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 24px 60px;
+    gap: 40px;
+  }
+
+  h1 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #52525b; font-weight: 600; }
+
+  .tab-bar { display: flex; gap: 0; border-bottom: 1px solid #27272a; width: 100%; max-width: 1200px; }
+  .tab { padding: 10px 20px; font-size: 13px; color: #52525b; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s; }
+  .tab.active { color: #818cf8; border-bottom-color: #818cf8; font-weight: 600; }
+
+  section { width: 100%; max-width: 1200px; display: flex; flex-direction: column; gap: 24px; }
+
+  /* ── Screen shell ── */
+  .screen-wrap {
+    width: 100%;
+    background: #18181b;
+    border-radius: 14px;
+    border: 1px solid #27272a;
+    overflow: hidden;
+  }
+  .screen-topbar {
+    height: 26px; background: #09090b;
+    display: flex; align-items: center; padding: 0 12px; gap: 6px;
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; }
+  .dot-r { background: #ef4444; } .dot-y { background: #f59e0b; } .dot-g { background: #22c55e; }
+  .screen-label { flex: 1; text-align: center; font-size: 10px; color: #3f3f46; }
+
+  .desktop {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    overflow: hidden;
+  }
+  .desktop-bg {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, #1a1033 0%, #0d1117 60%, #0f0a1e 100%);
+  }
+  .desktop-label {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-60%);
+    font-size: 40px; font-weight: 800; color: rgba(255,255,255,0.04);
+    pointer-events: none; letter-spacing: -.02em;
+  }
+
+  /* ── THE PANEL ── */
+  .panel {
+    position: relative; z-index: 1;
+    width: 100%;
+    background: rgba(10, 10, 14, 0.94);
+    backdrop-filter: blur(60px) saturate(1.4);
+    border-top: 1px solid rgba(255,255,255,0.07);
+    box-shadow: 0 -20px 60px rgba(0,0,0,0.7);
+  }
+
+  .panel-light {
+    background: rgba(248, 249, 252, 0.97);
+    border-top: 1px solid rgba(0,0,0,0.07);
+    box-shadow: 0 -20px 60px rgba(0,0,0,0.15);
+  }
+
+  /* drag handle */
+  .handle { width: 32px; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.1); margin: 10px auto 0; }
+  .panel-light .handle { background: rgba(0,0,0,0.1); }
+
+  /* header row */
+  .panel-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .panel-light .panel-header { border-bottom-color: rgba(0,0,0,0.06); }
+
+  .logo { width: 26px; height: 26px; border-radius: 6px; background: linear-gradient(135deg,#6366f1,#818cf8); display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; color: white; flex-shrink: 0; }
+
+  .search {
+    display: flex; align-items: center; gap: 7px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px; padding: 0 10px; height: 30px; min-width: 220px;
+  }
+  .panel-light .search { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.09); }
+  .search-icon { font-size: 13px; color: #52525b; }
+  .search-ph { font-size: 12px; color: #3f3f46; }
+  .panel-light .search-ph { color: #9ca3af; }
+
+  .chips { display: flex; gap: 5px; flex-wrap: nowrap; }
+  .chip { padding: 3px 11px; border-radius: 12px; font-size: 11px; font-weight: 500; cursor: pointer; border: none; white-space: nowrap; }
+  .chip-on { background: #6366f1; color: #fff; }
+  .chip-off { background: rgba(255,255,255,0.06); color: #71717a; }
+  .panel-light .chip-off { background: rgba(0,0,0,0.06); color: #6b7280; }
+
+  .spacer { flex: 1; }
+
+  .icon-btn { background: transparent; border: none; color: #52525b; font-size: 15px; cursor: pointer; padding: 4px 6px; border-radius: 6px; }
+  .icon-btn:hover { background: rgba(255,255,255,0.07); }
+  .panel-light .icon-btn { color: #9ca3af; }
+  .panel-light .icon-btn:hover { background: rgba(0,0,0,0.05); }
+
+  /* card scroll row */
+  .cards-row {
+    display: flex; gap: 8px;
+    padding: 12px 20px 12px;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .cards-row::-webkit-scrollbar { display: none; }
+
+  /* ── CARD ── */
+  .card {
+    flex-shrink: 0; width: 168px;
+    border-radius: 11px;
+    border: 1.5px solid rgba(255,255,255,0.06);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform .15s, border-color .15s, box-shadow .15s;
+    position: relative;
+    background: rgba(255,255,255,0.03);
+  }
+  .card:hover { transform: translateY(-3px); }
+  .card.selected {
+    border-color: rgba(255,255,255,0.25);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.15), 0 8px 24px rgba(0,0,0,0.4);
+    transform: translateY(-4px);
+  }
+
+  .panel-light .card { background: white; border-color: rgba(0,0,0,0.06); }
+  .panel-light .card.selected { border-color: rgba(0,0,0,0.18); box-shadow: 0 0 0 1px rgba(0,0,0,0.1), 0 8px 24px rgba(0,0,0,0.1); }
+
+  /* card top band — colored from app */
+  .card-band {
+    height: 36px; display: flex; align-items: center; padding: 0 10px; gap: 7px;
+    position: relative;
+  }
+  .app-icon {
+    width: 20px; height: 20px; border-radius: 5px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  .app-name { font-size: 11px; font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .content-badge { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 5px; text-transform: uppercase; letter-spacing: .03em; flex-shrink: 0; }
+
+  /* card preview */
+  .card-body { height: 100px; overflow: hidden; position: relative; }
+  .card-text { font-size: 11px; line-height: 1.55; padding: 8px 10px; color: #a1a1aa; overflow: hidden; max-height: 100%;
+    display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; }
+  .panel-light .card-text { color: #4b5563; }
+  .card-code { font-family: 'Cascadia Code','Fira Code',monospace; font-size: 10px; line-height: 1.5;
+    color: #a5f3fc; background: #0c0a20; padding: 8px 10px; height: 100%; overflow: hidden; }
+  .panel-light .card-code { background: #f1f5ff; color: #3b5fd8; }
+  .card-image { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+  .card-url { padding: 10px; display: flex; flex-direction: column; gap: 4px; }
+  .url-domain { font-size: 12px; font-weight: 600; }
+  .url-path { font-size: 10px; font-family: monospace; color: #52525b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .panel-light .url-path { color: #9ca3af; }
+  .card-color { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+  .color-swatch { width: 80px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); }
+  .color-hex { font-size: 11px; font-family: monospace; color: #a1a1aa; }
+  .panel-light .color-hex { color: #374151; }
+
+  /* card footer */
+  .card-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 10px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    background: rgba(0,0,0,0.2);
+  }
+  .panel-light .card-foot { border-top-color: rgba(0,0,0,0.05); background: rgba(0,0,0,0.02); }
+  .card-time { font-size: 10px; color: #3f3f46; }
+  .panel-light .card-time { color: #9ca3af; }
+  .pin-icon { font-size: 11px; }
+
+  /* selected ring overlay on band */
+  .card.selected .card-band::after {
+    content: ''; position: absolute; inset: 0;
+    background: rgba(255,255,255,0.04);
+    border-radius: 4px 4px 0 0;
+  }
+
+  /* kbd footer */
+  .panel-footer {
+    display: flex; align-items: center; gap: 20px;
+    padding: 7px 20px 10px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+  .panel-light .panel-footer { border-top-color: rgba(0,0,0,0.06); }
+  .kh { font-size: 10px; color: #3f3f46; display: flex; align-items: center; gap: 5px; }
+  .panel-light .kh { color: #9ca3af; }
+  kbd {
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px; padding: 1px 6px; font-family: inherit; font-size: 10px; color: #71717a;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.3);
+  }
+  .panel-light kbd { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.12); color: #6b7280; box-shadow: 0 1px 0 rgba(0,0,0,0.1); }
+  .kh-sep { color: #27272a; }
+  .panel-light .kh-sep { color: #d1d5db; }
+
+  /* result count */
+  .result-count { font-size: 10px; color: #52525b; margin-left: 4px; }
+</style>
+</head>
+<body>
+
+<h1>CopyTrail — Refined Design Mockup</h1>
+
+<div class="tab-bar">
+  <div class="tab active" onclick="showTab('dark', this)">Dark Mode</div>
+  <div class="tab" onclick="showTab('light', this)">Light Mode</div>
+  <div class="tab" onclick="showTab('hover', this)">Hover / Selected State</div>
+  <div class="tab" onclick="showTab('anim', this)">Slide-Up Animation</div>
+</div>
+
+<!-- ══════════════ DARK ══════════════ -->
+<section id="tab-dark">
+  <p style="color:#52525b;font-size:12px;line-height:1.7">
+    Full-width panel, single card row, newest → oldest left to right.
+    Card top band color + app icon come from the source application.
+    Selected card (keyboard nav) is highlighted. Pressing <kbd>Enter</kbd> pastes.
+  </p>
+  <div class="screen-wrap">
+    <div class="screen-topbar">
+      <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+      <div class="screen-label">Windows Desktop</div>
+    </div>
+    <div class="desktop" style="height:440px">
+      <div class="desktop-bg"></div>
+      <div class="desktop-label">Desktop</div>
+      <div class="panel">
+        <div class="handle"></div>
+        <div class="panel-header">
+          <div class="logo">CT</div>
+          <div class="search">
+            <span class="search-icon">⌕</span>
+            <span class="search-ph">Search clipboard history…</span>
+          </div>
+          <div class="chips">
+            <button class="chip chip-on">All</button>
+            <button class="chip chip-off">Text</button>
+            <button class="chip chip-off">Links</button>
+            <button class="chip chip-off">Code</button>
+            <button class="chip chip-off">Images</button>
+            <button class="chip chip-off">Colors</button>
+            <button class="chip chip-off">Files</button>
+            <button class="chip chip-off">📌 Pinned</button>
+          </div>
+          <div class="spacer"></div>
+          <button class="icon-btn" title="Settings">⚙</button>
+        </div>
+
+        <div class="cards-row">
+
+          <!-- Card 1: VS Code — blue, selected -->
+          <div class="card selected">
+            <div class="card-band" style="background:linear-gradient(90deg,rgba(0,120,212,0.35),rgba(0,120,212,0.12))">
+              <div class="app-icon" style="background:#0078d4">
+                <svg width="12" height="12" viewBox="0 0 100 100" fill="none">
+                  <path d="M74 6L38 45 17 28 6 34v32l11 6 21-17 36 39 20-9V15L74 6z" fill="white"/>
+                </svg>
+              </div>
+              <span class="app-name" style="color:#60a5fa">VS Code</span>
+              <span class="content-badge" style="background:rgba(34,211,238,0.15);color:#22d3ee">Code</span>
+            </div>
+            <div class="card-body">
+              <div class="card-code">const handler = async (req, res) => {<br/>  const user = await db.findUser(<br/>    req.params.id<br/>  );<br/>  return res.json(user);<br/>};</div>
+            </div>
+            <div class="card-foot">
+              <span class="card-time">Just now</span>
+              <span class="pin-icon" style="color:#3f3f46">⚑</span>
+            </div>
+          </div>
+
+          <!-- Card 2: Figma — purple -->
+          <div class="card">
+            <div class="card-band" style="background:linear-gradient(90deg,rgba(162,85,247,0.35),rgba(162,85,247,0.12))">
+              <div class="app-icon" style="background:linear-gradient(135deg,#f24e1e,#a259ff)">
+                <svg width="12" height="12" viewBox="0 0 38 57" fill="white">
+                  <path d="M19 28.5A9.5 9.5 0 1 1 28.5 19H19v9.5z"/>
+                  <path d="M9.5 47.5A9.5 9.5 0 0 1 19 38v9.5H9.5z"/>
+                  <path d="M19 9.5H9.5A9.5 9.5 0 0 1 9.5 0H19v9.5z"/>
+                  <path d="M19 19H9.5A9.5 9.5 0 1 1 9.5 0H19v19z" opacity=".6"/>
+                  <circle cx="28.5" cy="38" r="9.5"/>
+                </svg>
+              </div>
+              <span class="app-name" style="color:#c084fc">Figma</span>
+              <span class="content-badge" style="background:rgba(192,132,252,0.15);color:#c084fc">Image</span>
+            </div>
+            <div class="card-body">
+              <div class="card-image" style="background:linear-gradient(135deg,rgba(162,85,247,0.15),rgba(162,85,247,0.05))">🖼</div>
+            </div>
+            <div class="card-foot">
+              <span class="card-time">3m ago</span>
+              <span class="pin-icon" style="color:#6366f1">⚑</span>
+            </div>
+          </div>
+
+          <!-- Card 3: Chrome — blue/red -->
+          <div class="card">
+            <div class="card-band" style="background:linear-gradient(90deg,rgba(66,133,244,0.35),rgba(66,133,244,0.12))">
+              <div class="app-icon" style="background:white;font-size:14px;color:#4285f4">🌐</div>
+              <span class="app-name" style="color:#60a5fa">Chrome</span>
+              <span class="content-badge" style="background:rgba(96,165,250,0.15);color:#60a5fa">Link</span>
+            </div>
+            <div class="card-body">
+              <div class="card-url">
+                <div class="url-domain" style="color:#818cf8">pasteapp.io</div>
+                <div class="url-path">pasteapp.io/features#keyboard</div>
+              </div>
+            </div>
+            <div class="card-foot">
+              <span class="card-time">8m ago</span>
+              <span class="pin-icon" style="color:#3f3f46">⚑</span>
+            </div>
+          </div>
+
+          <!-- Card 4: Slack — purple -->
+          <div class="card">
+            <div class="card-band" style="background:linear-gradient(90deg,rgba(74,21,75,0.6),rgba(74,21,75,0.2))">
+              <div class="app-icon" style="background:#4a154b;font-size:13px">
+                <svg width="13" height="13" viewBox="0 0 54 54" fill="none">
+                  <path d="M19.7 33.5A3.3 3.3 0 0 1 13 33.5a3.3 3.3 0 0 1 6.6 0zM23 30.2a3.3 3.3 0 1 0 3.3-3.3A3.3 3.3 0 0 0 23 30.2z" fill="#E01E5A"/>
+                  <path d="M20.5 20.5a3.3 3.3 0 0 1 3.3-3.3 3.3 3.3 0 0 1 3.3 3.3v9.8a3.3 3.3 0 0 1-3.3 3.3 3.3 3.3 0 0 1-3.3-3.3z" fill="#E01E5A"/>
+                  <path d="M33.5 34.3a3.3 3.3 0 0 1-3.3 3.3 3.3 3.3 0 0 1-3.3-3.3V24.5a3.3 3.3 0 0 1 3.3-3.3 3.3 3.3 0 0 1 3.3 3.3z" fill="#36C5F0"/>
+                  <path d="M33.5 20.5A3.3 3.3 0 0 1 27 20.5a3.3 3.3 0 0 1 6.6 0z" fill="#36C5F0"/>
+                  <path d="M20.5 34.3a3.3 3.3 0 0 0-3.3 3.3 3.3 3.3 0 0 0 3.3 3.3h9.8a3.3 3.3 0 0 0 3.3-3.3 3.3 3.3 0 0 0-3.3-3.3z" fill="#2EB67D"/>
+                  <path d="M34.3 33.5a3.3 3.3 0 0 0 3.3 3.3 3.3 3.3 0 0 0 3.3-3.3v-9.8a3.3 3.3 0 0 0-3.3-3.3 3.3 3.3 0 0 0-3.3 3.3z" fill="#2EB67D"/>
+                  <path d="M33.5 19.7a3.3 3.3 0 0 0 3.3 3.3h9.8a3.3 3.3 0 0 0 3.3-3.3 3.3 3.3 0 0 0-3.3-3.3h-9.8A3.3 3.3 0 0 0 33.5 19.7z" fill="#ECB22E"/>
+                  <path d="M19.7 20.5a3.3 3.3 0 0 0-3.3-3.3H6.6a3.3 3.3 0 0 0-3.3 3.3 3.3 3.3 0 0 0 3.3 3.3h9.8A3.3 3.3 0 0 0 19.7 20.5z" fill="#ECB22E"/>
+                </svg>
+              </div>
+              <span class="app-name" style="color:#e879f9">Slack</span>
+              <span class="content-badge" style="background:rgba(168,85,247,0.15);color:#c084fc">Text</span>
+            </div>
+            <div class="card-body">
+              <div class="card-text">Meeting tomorrow at 10am — bring the Q3 deck and make sure the demo env is up on staging before 9:45.</div>
+            </div>
+            <div class="card-foot">
+              <span class="card-time">22m ago</span>
+              <span class="pin-icon" style="color:#3f3f46">⚑</span>
+            </div>
+          </div>
+
+          <!-- Card 5: Claude — orange -->
+          <div class="card">
+            <div class="card-band" style="background:linear-gradient(90deg,rgba(212,136,94,0.35),rgba(212,136,94,0.12))">
+              <div class="app-icon" style="background:#d4885e;font-size:13px">🤖</div>
+              <span class="app-name" style="color:#fb923c">claude</span>
+              <span class="content-badge" style="background:rgba(251,146,60,0.15);color:#fb923c">Text</span>
+            </div>
+            <div class="card-body">
+              <div class="card-text">Here's the revised function with error handling and the retry logic you asked for. Note that the timeout is configurable.</div>
+            </div>
+            <div class="card-foot">
+              <span class="card-time">45m ago</span>
+              <span class="pin-icon" style="color:#3f3f46">⚑</span>
+            </div>
+          </div>
+
+          <!-- Card 6: Figma color -->
+          <div class="card">
+            <div class="card-band" style="background:linear-gradient(90deg,rgba(249,115,22,0.35),rgba(249,115,22,0.12))">
+              <div class="app-icon" style="background:linear-gradient(135deg,#f24e1e,#a259ff)">F</div>
+              <span class="app-name" style="color:#fb923c">Figma</span>
+              <span class="content-badge" style="background:rgba(251,146,60,0.15);color:#fb923c">Color</span>
+            </div>
+            <div class="card-body">
+              <div class="card-color">
+                <div class="color-swatch" style="background:#6366f1"></div>
+                <div class="color-hex">#6366F1</div>
+              </div>
+            </div>
+            <div class="card-foot">
+              <span class="card-time">1h ago</span>
+              <span class="pin-icon" style="color:#3f3f46">⚑</span>
+            </div>
+          </div>
+
+          <!-- Card 7: Terminal — green -->
+          <div class="card">
+            <div class="card-band" style="background:linear-gradient(90deg,rgba(34,197,94,0.25),rgba(34,197,94,0.08))">
+              <div class="app-icon" style="background:#1a1a1a;color:#22c55e;font-size:12px;font-family:monospace;font-weight:900">$_</div>
+              <span class="app-name" style="color:#4ade80">Terminal</span>
+              <span class="content-badge" style="background:rgba(34,211,238,0.15);color:#22d3ee">Code</span>
+            </div>
+            <div class="card-body">
+              <div class="card-code" style="color:#4ade80">git rebase -i HEAD~3<br/>--autosquash --no-edit</div>
+            </div>
+            <div class="card-foot">
+              <span class="card-time">2h ago</span>
+              <span class="pin-icon" style="color:#3f3f46">⚑</span>
+            </div>
+          </div>
+
+          <!-- Card 8: Notion — gray -->
+          <div class="card">
+            <div class="card-band" style="background:linear-gradient(90deg,rgba(120,120,120,0.2),rgba(120,120,120,0.06))">
+              <div class="app-icon" style="background:#191919;color:white;font-weight:900;font-size:14px">N</div>
+              <span class="app-name" style="color:#a1a1aa">Notion</span>
+              <span class="content-badge" style="background:rgba(161,161,170,0.12);color:#a1a1aa">Text</span>
+            </div>
+            <div class="card-body">
+              <div class="card-text">Rebase feature branch on main before PR review. Fix lint failures in CI before requesting review.</div>
+            </div>
+            <div class="card-foot">
+              <span class="card-time">3h ago</span>
+              <span class="pin-icon" style="color:#3f3f46">⚑</span>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="panel-footer">
+          <span class="kh"><kbd>← →</kbd> Navigate cards</span>
+          <span class="kh-sep">·</span>
+          <span class="kh"><kbd>Enter</kbd> Paste selected</span>
+          <span class="kh-sep">·</span>
+          <span class="kh"><kbd>Ctrl+Enter</kbd> Copy only</span>
+          <span class="kh-sep">·</span>
+          <span class="kh"><kbd>P</kbd> Pin / unpin</span>
+          <span class="kh-sep">·</span>
+          <span class="kh"><kbd>Ctrl+F</kbd> Search</span>
+          <span class="kh-sep">·</span>
+          <span class="kh"><kbd>Esc</kbd> Dismiss</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ LIGHT ══════════════ -->
+<section id="tab-light" style="display:none">
+  <div class="screen-wrap" style="background:#f0f4f8">
+    <div class="screen-topbar" style="background:#e2e8f0">
+      <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+      <div class="screen-label" style="color:#94a3b8">Windows Desktop — Light Mode</div>
+    </div>
+    <div class="desktop" style="height:440px">
+      <div class="desktop-bg" style="background:linear-gradient(135deg,#dbeafe,#f0fdf4,#fef3c7)"></div>
+      <div class="desktop-label" style="color:rgba(0,0,0,0.04)">Desktop</div>
+      <div class="panel panel-light">
+        <div class="handle"></div>
+        <div class="panel-header">
+          <div class="logo">CT</div>
+          <div class="search" style="background:rgba(0,0,0,0.05);border-color:rgba(0,0,0,0.09)">
+            <span class="search-icon" style="color:#9ca3af">⌕</span>
+            <span style="font-size:12px;color:#9ca3af">Search clipboard history…</span>
+          </div>
+          <div class="chips">
+            <button class="chip chip-on">All</button>
+            <button class="chip" style="background:rgba(0,0,0,0.06);color:#6b7280;border:none;padding:3px 11px;border-radius:12px;font-size:11px">Text</button>
+            <button class="chip" style="background:rgba(0,0,0,0.06);color:#6b7280;border:none;padding:3px 11px;border-radius:12px;font-size:11px">Links</button>
+            <button class="chip" style="background:rgba(0,0,0,0.06);color:#6b7280;border:none;padding:3px 11px;border-radius:12px;font-size:11px">Code</button>
+            <button class="chip" style="background:rgba(0,0,0,0.06);color:#6b7280;border:none;padding:3px 11px;border-radius:12px;font-size:11px">Images</button>
+            <button class="chip" style="background:rgba(0,0,0,0.06);color:#6b7280;border:none;padding:3px 11px;border-radius:12px;font-size:11px">Colors</button>
+            <button class="chip" style="background:rgba(0,0,0,0.06);color:#6b7280;border:none;padding:3px 11px;border-radius:12px;font-size:11px">📌 Pinned</button>
+          </div>
+          <div class="spacer"></div>
+          <button class="icon-btn" style="color:#9ca3af" title="Settings">⚙</button>
+        </div>
+
+        <div class="cards-row">
+          <!-- VS Code -->
+          <div class="card" style="background:white;border-color:rgba(0,0,0,0.07)" id="lc1">
+            <div class="card-band" style="background:linear-gradient(90deg,rgba(0,120,212,0.12),rgba(0,120,212,0.04))">
+              <div class="app-icon" style="background:#0078d4"><svg width="12" height="12" viewBox="0 0 100 100" fill="none"><path d="M74 6L38 45 17 28 6 34v32l11 6 21-17 36 39 20-9V15L74 6z" fill="white"/></svg></div>
+              <span class="app-name" style="color:#0078d4">VS Code</span>
+              <span class="content-badge" style="background:rgba(6,182,212,0.12);color:#0891b2">Code</span>
+            </div>
+            <div class="card-body"><div class="card-code" style="background:#f0f7ff;color:#1e40af">const handler = async (req, res) => {<br/>  const user = await db.findUser(<br/>    req.params.id<br/>  );<br/>  return res.json(user);<br/>};</div></div>
+            <div class="card-foot" style="border-top-color:rgba(0,0,0,0.05);background:rgba(0,0,0,0.01)"><span class="card-time" style="color:#9ca3af">Just now</span><span style="color:#d1d5db">⚑</span></div>
+          </div>
+          <!-- Figma -->
+          <div class="card" style="background:white;border-color:rgba(0,0,0,0.07)">
+            <div class="card-band" style="background:linear-gradient(90deg,rgba(162,85,247,0.1),rgba(162,85,247,0.03))">
+              <div class="app-icon" style="background:linear-gradient(135deg,#f24e1e,#a259ff)">F</div>
+              <span class="app-name" style="color:#7c3aed">Figma</span>
+              <span class="content-badge" style="background:rgba(139,92,246,0.1);color:#7c3aed">Image</span>
+            </div>
+            <div class="card-body"><div class="card-image" style="background:linear-gradient(135deg,rgba(162,85,247,0.08),rgba(162,85,247,0.02))">🖼</div></div>
+            <div class="card-foot" style="border-top-color:rgba(0,0,0,0.05);background:rgba(0,0,0,0.01)"><span class="card-time" style="color:#9ca3af">3m ago</span><span style="color:#d1d5db">⚑</span></div>
+          </div>
+          <!-- Slack -->
+          <div class="card" style="background:white;border-color:rgba(0,0,0,0.07)">
+            <div class="card-band" style="background:linear-gradient(90deg,rgba(74,21,75,0.1),rgba(74,21,75,0.03))">
+              <div class="app-icon" style="background:#4a154b;font-size:11px">💬</div>
+              <span class="app-name" style="color:#86198f">Slack</span>
+              <span class="content-badge" style="background:rgba(134,25,143,0.1);color:#86198f">Text</span>
+            </div>
+            <div class="card-body"><div class="card-text" style="color:#374151">Meeting tomorrow at 10am — bring the Q3 deck and make sure the demo env is up on staging before 9:45.</div></div>
+            <div class="card-foot" style="border-top-color:rgba(0,0,0,0.05);background:rgba(0,0,0,0.01)"><span class="card-time" style="color:#9ca3af">22m ago</span><span style="color:#d1d5db">⚑</span></div>
+          </div>
+          <!-- Claude -->
+          <div class="card" style="background:white;border-color:rgba(0,0,0,0.07)">
+            <div class="card-band" style="background:linear-gradient(90deg,rgba(212,136,94,0.15),rgba(212,136,94,0.04))">
+              <div class="app-icon" style="background:#d4885e">🤖</div>
+              <span class="app-name" style="color:#c2410c">claude</span>
+              <span class="content-badge" style="background:rgba(234,88,12,0.1);color:#c2410c">Text</span>
+            </div>
+            <div class="card-body"><div class="card-text" style="color:#374151">Here's the revised function with error handling and the retry logic you asked for.</div></div>
+            <div class="card-foot" style="border-top-color:rgba(0,0,0,0.05);background:rgba(0,0,0,0.01)"><span class="card-time" style="color:#9ca3af">45m ago</span><span style="color:#d1d5db">⚑</span></div>
+          </div>
+          <!-- Figma color -->
+          <div class="card" style="background:white;border-color:rgba(0,0,0,0.07)">
+            <div class="card-band" style="background:linear-gradient(90deg,rgba(249,115,22,0.12),rgba(249,115,22,0.03))">
+              <div class="app-icon" style="background:linear-gradient(135deg,#f24e1e,#a259ff)">F</div>
+              <span class="app-name" style="color:#ea580c">Figma</span>
+              <span class="content-badge" style="background:rgba(234,88,12,0.1);color:#ea580c">Color</span>
+            </div>
+            <div class="card-body"><div class="card-color"><div class="color-swatch" style="background:#6366f1;border-color:rgba(0,0,0,0.1)"></div><div class="color-hex" style="color:#374151">#6366F1</div></div></div>
+            <div class="card-foot" style="border-top-color:rgba(0,0,0,0.05);background:rgba(0,0,0,0.01)"><span class="card-time" style="color:#9ca3af">1h ago</span><span style="color:#d1d5db">⚑</span></div>
+          </div>
+          <!-- Notion -->
+          <div class="card" style="background:white;border-color:rgba(0,0,0,0.07)">
+            <div class="card-band" style="background:linear-gradient(90deg,rgba(0,0,0,0.05),rgba(0,0,0,0.01))">
+              <div class="app-icon" style="background:#191919;color:white;font-weight:900">N</div>
+              <span class="app-name" style="color:#374151">Notion</span>
+              <span class="content-badge" style="background:rgba(55,65,81,0.1);color:#374151">Text</span>
+            </div>
+            <div class="card-body"><div class="card-text" style="color:#374151">Rebase feature branch on main before PR review. Fix lint failures in CI.</div></div>
+            <div class="card-foot" style="border-top-color:rgba(0,0,0,0.05);background:rgba(0,0,0,0.01)"><span class="card-time" style="color:#9ca3af">3h ago</span><span style="color:#d1d5db">⚑</span></div>
+          </div>
+        </div>
+
+        <div class="panel-footer" style="border-top-color:rgba(0,0,0,0.06)">
+          <span class="kh" style="color:#9ca3af"><kbd style="background:rgba(0,0,0,0.05);border-color:rgba(0,0,0,0.12);color:#6b7280">← →</kbd> Navigate cards</span>
+          <span class="kh-sep" style="color:#d1d5db">·</span>
+          <span class="kh" style="color:#9ca3af"><kbd style="background:rgba(0,0,0,0.05);border-color:rgba(0,0,0,0.12);color:#6b7280">Enter</kbd> Paste selected</span>
+          <span class="kh-sep" style="color:#d1d5db">·</span>
+          <span class="kh" style="color:#9ca3af"><kbd style="background:rgba(0,0,0,0.05);border-color:rgba(0,0,0,0.12);color:#6b7280">Ctrl+Enter</kbd> Copy only</span>
+          <span class="kh-sep" style="color:#d1d5db">·</span>
+          <span class="kh" style="color:#9ca3af"><kbd style="background:rgba(0,0,0,0.05);border-color:rgba(0,0,0,0.12);color:#6b7280">P</kbd> Pin</span>
+          <span class="kh-sep" style="color:#d1d5db">·</span>
+          <span class="kh" style="color:#9ca3af"><kbd style="background:rgba(0,0,0,0.05);border-color:rgba(0,0,0,0.12);color:#6b7280">Esc</kbd> Dismiss</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ HOVER / SELECTED ══════════════ -->
+<section id="tab-hover" style="display:none">
+  <p style="color:#52525b;font-size:12px;line-height:1.7">
+    Cards have three states: default, hovered (mouse), and selected (keyboard focus).
+    The selected card shows a Paste / Copy overlay at the bottom.
+    Pressing <kbd style="background:#27272a;border:1px solid #3f3f46;border-radius:4px;padding:1px 6px;color:#a1a1aa">Enter</kbd> pastes the selected card's content.
+  </p>
+  <div style="display:flex;gap:20px;align-items:flex-end;flex-wrap:wrap">
+
+    <!-- Default -->
+    <div>
+      <div style="font-size:10px;color:#52525b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Default</div>
+      <div class="card" style="width:180px">
+        <div class="card-band" style="background:linear-gradient(90deg,rgba(0,120,212,0.35),rgba(0,120,212,0.12))">
+          <div class="app-icon" style="background:#0078d4"><svg width="12" height="12" viewBox="0 0 100 100" fill="none"><path d="M74 6L38 45 17 28 6 34v32l11 6 21-17 36 39 20-9V15L74 6z" fill="white"/></svg></div>
+          <span class="app-name" style="color:#60a5fa">VS Code</span>
+          <span class="content-badge" style="background:rgba(34,211,238,0.15);color:#22d3ee">Code</span>
+        </div>
+        <div class="card-body"><div class="card-code">const x = greet("World");<br/>console.log(x);</div></div>
+        <div class="card-foot"><span class="card-time">2m ago</span><span style="color:#3f3f46">⚑</span></div>
+      </div>
+    </div>
+
+    <!-- Hovered -->
+    <div>
+      <div style="font-size:10px;color:#52525b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Hovered (mouse)</div>
+      <div class="card" style="width:180px;transform:translateY(-3px);border-color:rgba(255,255,255,0.15)">
+        <div class="card-band" style="background:linear-gradient(90deg,rgba(0,120,212,0.4),rgba(0,120,212,0.15))">
+          <div class="app-icon" style="background:#0078d4"><svg width="12" height="12" viewBox="0 0 100 100" fill="none"><path d="M74 6L38 45 17 28 6 34v32l11 6 21-17 36 39 20-9V15L74 6z" fill="white"/></svg></div>
+          <span class="app-name" style="color:#60a5fa">VS Code</span>
+          <span class="content-badge" style="background:rgba(34,211,238,0.15);color:#22d3ee">Code</span>
+        </div>
+        <div class="card-body"><div class="card-code">const x = greet("World");<br/>console.log(x);</div></div>
+        <div class="card-foot" style="background:rgba(0,120,212,0.08)">
+          <span class="card-time">2m ago</span>
+          <div style="display:flex;gap:6px">
+            <span style="font-size:10px;color:#60a5fa;cursor:pointer">↵ Paste</span>
+            <span style="font-size:10px;color:#71717a;cursor:pointer">⎘ Copy</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Keyboard selected -->
+    <div>
+      <div style="font-size:10px;color:#818cf8;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Keyboard selected (← →)</div>
+      <div class="card selected" style="width:180px">
+        <div class="card-band" style="background:linear-gradient(90deg,rgba(0,120,212,0.45),rgba(0,120,212,0.18))">
+          <div class="app-icon" style="background:#0078d4"><svg width="12" height="12" viewBox="0 0 100 100" fill="none"><path d="M74 6L38 45 17 28 6 34v32l11 6 21-17 36 39 20-9V15L74 6z" fill="white"/></svg></div>
+          <span class="app-name" style="color:#93c5fd">VS Code</span>
+          <span class="content-badge" style="background:rgba(34,211,238,0.15);color:#22d3ee">Code</span>
+        </div>
+        <div class="card-body"><div class="card-code">const x = greet("World");<br/>console.log(x);</div></div>
+        <div class="card-foot" style="background:rgba(99,102,241,0.12);border-top-color:rgba(99,102,241,0.2)">
+          <div style="display:flex;gap:8px;width:100%;align-items:center">
+            <span style="font-size:10.5px;color:#818cf8;font-weight:600">↵ Enter to paste</span>
+            <span style="margin-left:auto;font-size:10px;color:#52525b">Ctrl+Enter copy</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pinned -->
+    <div>
+      <div style="font-size:10px;color:#52525b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Pinned item</div>
+      <div class="card" style="width:180px">
+        <div class="card-band" style="background:linear-gradient(90deg,rgba(162,85,247,0.35),rgba(162,85,247,0.12))">
+          <div class="app-icon" style="background:linear-gradient(135deg,#f24e1e,#a259ff)">F</div>
+          <span class="app-name" style="color:#c084fc">Figma</span>
+          <span class="content-badge" style="background:rgba(192,132,252,0.15);color:#c084fc">Image</span>
+        </div>
+        <div class="card-body"><div class="card-image" style="background:linear-gradient(135deg,rgba(162,85,247,0.15),rgba(162,85,247,0.05))">🖼</div></div>
+        <div class="card-foot"><span class="card-time">3m ago</span><span style="color:#6366f1">⚑</span></div>
+        <div style="position:absolute;top:8px;right:8px;width:6px;height:6px;border-radius:50%;background:#6366f1"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="background:#18181b;border:1px solid #27272a;border-radius:10px;padding:16px 20px;margin-top:8px">
+    <div style="font-size:11px;color:#52525b;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Selection Behavior (no auto-paste on arrow key)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:12px;color:#71717a;line-height:1.7">
+      <div>
+        <div style="color:#818cf8;font-weight:600;margin-bottom:4px">Keyboard flow</div>
+        ← → moves highlight to prev/next card<br/>
+        Card shows "Enter to paste" hint in footer<br/>
+        <kbd style="background:#27272a;border:1px solid #3f3f46;padding:1px 5px;border-radius:3px;font-size:10px;color:#a1a1aa">Enter</kbd> pastes the highlighted card &amp; dismisses<br/>
+        <kbd style="background:#27272a;border:1px solid #3f3f46;padding:1px 5px;border-radius:3px;font-size:10px;color:#a1a1aa">Ctrl+Enter</kbd> copies without pasting or dismissing
+      </div>
+      <div>
+        <div style="color:#818cf8;font-weight:600;margin-bottom:4px">Mouse flow</div>
+        Hovering a card reveals ↵ Paste + ⎘ Copy in footer<br/>
+        Clicking anywhere on card = paste &amp; dismiss<br/>
+        Clicking ⎘ Copy = copy only, panel stays open<br/>
+        Right-click = context menu (Pin / Copy / Delete)
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ ANIMATION ══════════════ -->
+<section id="tab-anim" style="display:none">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    <div style="background:#18181b;border:1px solid #27272a;border-radius:10px;padding:16px 20px">
+      <div style="font-size:11px;color:#6366f1;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Show — Alt+V pressed</div>
+      <div style="font-size:12px;color:#71717a;line-height:1.9">
+        1. Window positioned at screen bottom edge<br/>
+        2. <code style="background:#27272a;padding:1px 5px;border-radius:3px;color:#a5f3fc">TranslateTransform.Y</code> = +panelHeight<br/>
+        3. Storyboard: Y → 0 over <strong style="color:#a1a1aa">240ms</strong><br/>
+        4. Easing: <code style="background:#27272a;padding:1px 5px;border-radius:3px;color:#a5f3fc">CubicEase Out</code><br/>
+        5. Opacity: 0 → 1 in first 80ms<br/>
+        6. Window stays resident (Show/Hide, not Open/Close)
+      </div>
+    </div>
+    <div style="background:#18181b;border:1px solid #27272a;border-radius:10px;padding:16px 20px">
+      <div style="font-size:11px;color:#52525b;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Hide — Esc / focus lost / Enter paste</div>
+      <div style="font-size:12px;color:#71717a;line-height:1.9">
+        1. Storyboard: Y → +panelHeight over <strong style="color:#a1a1aa">180ms</strong><br/>
+        2. Easing: <code style="background:#27272a;padding:1px 5px;border-radius:3px;color:#a5f3fc">CubicEase In</code><br/>
+        3. Opacity: 1 → 0 in last 60ms<br/>
+        4. <code style="background:#27272a;padding:1px 5px;border-radius:3px;color:#a5f3fc">Window.Hide()</code> called on Completed<br/>
+        5. Paste action fires before animation if triggered by Enter
+      </div>
+    </div>
+  </div>
+
+  <!-- Animated preview -->
+  <div style="background:#18181b;border:1px solid #27272a;border-radius:10px;overflow:hidden">
+    <div style="background:#09090b;padding:8px 16px;font-size:10px;color:#52525b;text-align:center">Live animation preview (click to toggle)</div>
+    <div id="anim-demo" onclick="toggleAnim()" style="height:260px;background:linear-gradient(135deg,#1a1033,#0d1117);position:relative;display:flex;flex-direction:column;justify-content:flex-end;cursor:pointer;overflow:hidden">
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);font-size:36px;font-weight:800;color:rgba(255,255,255,0.04)">Desktop</div>
+      <div id="anim-panel" style="width:100%;background:rgba(10,10,14,0.94);border-top:1px solid rgba(255,255,255,0.07);transform:translateY(160px);transition:transform 240ms cubic-bezier(0.16,1,0.3,1),opacity 240ms ease;opacity:0">
+        <div style="width:32px;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin:8px auto 0"></div>
+        <div style="display:flex;gap:8px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <div style="width:22px;height:22px;border-radius:5px;background:linear-gradient(135deg,#6366f1,#818cf8);flex-shrink:0"></div>
+          <div style="height:24px;flex:1;max-width:200px;background:rgba(255,255,255,0.06);border-radius:6px"></div>
+          <div style="display:flex;gap:4px">
+            <div style="height:24px;width:40px;background:#6366f1;border-radius:10px"></div>
+            <div style="height:24px;width:36px;background:rgba(255,255,255,0.06);border-radius:10px"></div>
+            <div style="height:24px;width:36px;background:rgba(255,255,255,0.06);border-radius:10px"></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;padding:10px 16px">
+          <div style="width:150px;height:90px;border-radius:9px;background:rgba(0,120,212,0.15);border:1px solid rgba(0,120,212,0.2);flex-shrink:0"></div>
+          <div style="width:150px;height:90px;border-radius:9px;background:rgba(162,85,247,0.12);border:1px solid rgba(162,85,247,0.2);flex-shrink:0"></div>
+          <div style="width:150px;height:90px;border-radius:9px;background:rgba(74,21,75,0.25);border:1px solid rgba(74,21,75,0.4);flex-shrink:0"></div>
+          <div style="width:150px;height:90px;border-radius:9px;background:rgba(212,136,94,0.15);border:1px solid rgba(212,136,94,0.2);flex-shrink:0"></div>
+          <div style="width:150px;height:90px;border-radius:9px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.15);flex-shrink:0"></div>
+        </div>
+        <div style="padding:6px 16px 10px;border-top:1px solid rgba(255,255,255,0.05);font-size:10px;color:#3f3f46">
+          ← → Navigate  ·  Enter Paste  ·  Esc Dismiss
+        </div>
+      </div>
+    </div>
+  </div>
+  <p style="font-size:11px;color:#3f3f46;text-align:center">Click the desktop area above to toggle the panel open/closed</p>
+</section>
+
+<script>
+function showTab(name, el) {
+  document.querySelectorAll('section').forEach(s => s.style.display = 'none');
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).style.display = 'flex';
+  el.classList.add('active');
+}
+
+let panelOpen = false;
+function toggleAnim() {
+  const p = document.getElementById('anim-panel');
+  panelOpen = !panelOpen;
+  if (panelOpen) {
+    p.style.transform = 'translateY(0)';
+    p.style.opacity = '1';
+    p.style.transition = 'transform 240ms cubic-bezier(0.16,1,0.3,1), opacity 80ms ease';
+  } else {
+    p.style.transition = 'transform 180ms cubic-bezier(0.4,0,1,1), opacity 60ms ease 120ms';
+    p.style.transform = 'translateY(160px)';
+    p.style.opacity = '0';
+  }
+}
+</script>
+</body>
+</html>
