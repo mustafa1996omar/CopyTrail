@@ -7,6 +7,25 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
+
+    <!-- App identity -->
+    <AssemblyName>CopyTrail</AssemblyName>
+    <RootNamespace>CopyTrail</RootNamespace>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Product>CopyTrail</Product>
+    <Company>CopyTrail</Company>
+    <Description>Visual clipboard history for Windows</Description>
+    <Copyright>Copyright © 2026 CopyTrail</Copyright>
+    <ApplicationIcon>Resources\Icons\app.ico</ApplicationIcon>
+
+    <!-- Self-contained publish settings (used by dotnet publish) -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
 
   <ItemGroup>

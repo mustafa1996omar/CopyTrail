@@ -30,7 +30,7 @@ public static class StartupService
             if (enabled)
             {
                 var exePath = Environment.ProcessPath
-                    ?? System.Reflection.Assembly.GetExecutingAssembly().Location;
+                    ?? System.IO.Path.Combine(AppContext.BaseDirectory, AppName + ".exe");
                 key.SetValue(AppName, $"\"{exePath}\"");
             }
             else

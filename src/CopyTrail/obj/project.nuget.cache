@@ -1,15 +1,20 @@
 {
   "version": 2,
-  "dgSpecHash": "erAfdljYsM8=",
+  "dgSpecHash": "wfVQ0fRrlTg=",
   "success": true,
   "projectFilePath": "C:\\Users\\MustafaAlKhalidi\\Documents\\Projects\\CopyTrail\\src\\CopyTrail\\CopyTrail.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\MustafaAlKhalidi\\.nuget\\packages\\microsoft.data.sqlite\\9.0.4\\microsoft.data.sqlite.9.0.4.nupkg.sha512",
     "C:\\Users\\MustafaAlKhalidi\\.nuget\\packages\\microsoft.data.sqlite.core\\9.0.4\\microsoft.data.sqlite.core.9.0.4.nupkg.sha512",
+    "C:\\Users\\MustafaAlKhalidi\\.nuget\\packages\\microsoft.net.illink.tasks\\10.0.7\\microsoft.net.illink.tasks.10.0.7.nupkg.sha512",
     "C:\\Users\\MustafaAlKhalidi\\.nuget\\packages\\sqlitepclraw.bundle_e_sqlite3\\2.1.10\\sqlitepclraw.bundle_e_sqlite3.2.1.10.nupkg.sha512",
     "C:\\Users\\MustafaAlKhalidi\\.nuget\\packages\\sqlitepclraw.core\\2.1.10\\sqlitepclraw.core.2.1.10.nupkg.sha512",
     "C:\\Users\\MustafaAlKhalidi\\.nuget\\packages\\sqlitepclraw.lib.e_sqlite3\\2.1.10\\sqlitepclraw.lib.e_sqlite3.2.1.10.nupkg.sha512",
-    "C:\\Users\\MustafaAlKhalidi\\.nuget\\packages\\sqlitepclraw.provider.e_sqlite3\\2.1.10\\sqlitepclraw.provider.e_sqlite3.2.1.10.nupkg.sha512"
+    "C:\\Users\\MustafaAlKhalidi\\.nuget\\packages\\sqlitepclraw.provider.e_sqlite3\\2.1.10\\sqlitepclraw.provider.e_sqlite3.2.1.10.nupkg.sha512",
+    "C:\\Users\\MustafaAlKhalidi\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\10.0.7\\microsoft.netcore.app.runtime.win-x64.10.0.7.nupkg.sha512",
+    "C:\\Users\\MustafaAlKhalidi\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\10.0.7\\microsoft.windowsdesktop.app.runtime.win-x64.10.0.7.nupkg.sha512",
+    "C:\\Users\\MustafaAlKhalidi\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\10.0.7\\microsoft.aspnetcore.app.runtime.win-x64.10.0.7.nupkg.sha512",
+    "C:\\Users\\MustafaAlKhalidi\\.nuget\\packages\\microsoft.netcore.app.crossgen2.win-x64\\10.0.7\\microsoft.netcore.app.crossgen2.win-x64.10.0.7.nupkg.sha512"
   ],
   "logs": []
 }

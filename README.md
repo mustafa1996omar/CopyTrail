@@ -15,14 +15,28 @@ A modern, visual clipboard history app for Windows. Every clipboard entry shows 
 - Local SQLite storage — no cloud, no accounts, no telemetry
 - System tray integration
 
+---
+
 ## Requirements
 
-- Windows 10 or later
-- [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)
+- **Windows 10 or later**
+- [**.NET 10 Desktop Runtime**](https://dotnet.microsoft.com/download/dotnet/10.0) (only needed when running from source; the self-contained release includes the runtime)
+
+---
+
+## Running the Published Release
+
+Download `CopyTrail-v1.0.0-win-x64.zip` from the [Releases](../../releases) page, unzip it anywhere, and run `CopyTrail.exe`. No installer needed. The runtime is bundled.
+
+---
 
 ## Building from Source
 
+**Prerequisites:** [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) — Windows only.
+
 ```
+git clone https://github.com/mustafa1996omar/CopyTrail.git
+cd CopyTrail
 dotnet build CopyTrail.sln
 dotnet run --project src/CopyTrail/CopyTrail.csproj
 ```
@@ -33,16 +47,35 @@ dotnet run --project src/CopyTrail/CopyTrail.csproj
 dotnet test CopyTrail.sln
 ```
 
-## Privacy
+## Publishing a Self-Contained Windows Build
 
-CopyTrail is entirely local. No data ever leaves your machine.
+This command produces a single `.exe` in `publish/` that bundles the .NET runtime. No separate runtime install is required on the target machine.
 
-- All history is stored in `%LOCALAPPDATA%\CopyTrail\CopyTrail.db`
-- Settings are stored in `%APPDATA%\CopyTrail\settings.json`
-- Images are stored in `%LOCALAPPDATA%\CopyTrail\images\`
-- CopyTrail never records its own clipboard operations
-- Password managers are excluded by default (1Password, Bitwarden, KeePass, KeePassXC, CredentialUIBroker)
-- Additional apps can be excluded in Settings → Privacy
+```
+dotnet publish src/CopyTrail/CopyTrail.csproj -c Release -r win-x64 --self-contained true -o publish/
+```
+
+The output will be in the `publish/` folder. Zip it as `CopyTrail-v1.0.0-win-x64.zip` and attach it to a GitHub release.
+
+> Note: The `publish/` folder is listed in `.gitignore` and is not committed.
+
+---
+
+## Release Checklist
+
+Before tagging a release, verify each of the following manually:
+
+- [ ] `dotnet build CopyTrail.sln` passes with 0 errors and 0 warnings
+- [ ] `dotnet test CopyTrail.sln` passes with all tests green
+- [ ] `dotnet publish` completes without errors
+- [ ] Launch the published `CopyTrail.exe` — tray icon appears
+- [ ] Press **Alt+V** — popup opens
+- [ ] Copy text in Notepad — new card appears in popup
+- [ ] Click a card — content is pasted into Notepad
+- [ ] Open **Settings** from tray — settings window opens, changes save
+- [ ] Open **Settings → Data → Clear All History** — history clears
+
+---
 
 ## Usage
 
@@ -56,6 +89,21 @@ CopyTrail is entirely local. No data ever leaves your machine.
 | Ignore an app | Click ⋯ on a card → "Ignore this app next time" |
 | Pause capture | System tray → Pause Capture |
 | Settings | System tray → Settings |
+
+---
+
+## Privacy
+
+CopyTrail is entirely local. No data ever leaves your machine. See [PRIVACY.md](PRIVACY.md) for full details.
+
+- All history is stored in `%LOCALAPPDATA%\CopyTrail\CopyTrail.db`
+- Settings are stored in `%APPDATA%\CopyTrail\settings.json`
+- Images are stored in `%LOCALAPPDATA%\CopyTrail\images\`
+- CopyTrail never records its own clipboard operations
+- Password managers are excluded by default (1Password, Bitwarden, KeePass, KeePassXC, CredentialUIBroker)
+- Additional apps can be excluded in Settings → Privacy
+
+---
 
 ## Troubleshooting
 
@@ -78,6 +126,63 @@ Another application may have already registered the Alt+V hotkey.
 1. Confirm no other app is using Alt+V (see _Shortcut does not work_ above).
 2. If the popup opens off-screen after a monitor arrangement change, try moving your mouse to your primary monitor before pressing Alt+V.
 3. Restart CopyTrail from the system tray (right-click → Exit, then relaunch).
+
+### Reset the database
+
+To clear all clipboard history and start fresh:
+
+1. Open CopyTrail settings (tray icon → Settings → scroll to Data section → **Clear All History**), **or**
+2. Quit CopyTrail (tray → Exit), delete `%LOCALAPPDATA%\CopyTrail\CopyTrail.db` (and the `-shm`/`-wal` sibling files if present), then relaunch.
+
+### Privacy exclusions
+
+To stop CopyTrail from recording a specific application:
+
+1. Copy something from the app you want to exclude.
+2. Find the card in the popup, click the **⋯** button, then choose **Ignore this app next time**.
+3. Alternatively, open **Settings → Privacy → Excluded apps** and type the process name (e.g. `notepad` or `notepad.exe`).
+
+Excluded apps are matched case-insensitively and with or without the `.exe` suffix.
+
+---
+
+## Tech Stack
+
+- C# / WPF
+- .NET 10 (Windows Desktop SDK)
+- SQLite via Microsoft.Data.Sqlite
+- xUnit for tests
+
+## Project Structure
+
+```
+src/CopyTrail/          Main application
+  Controls/             ClipCard, SourceBadge user controls
+  Converters/           WPF value converters
+  Data/                 DbContext, repository, schema
+  Helpers/              Win32 P/Invoke declarations
+  Models/               Domain records and enums
+  Services/             Clipboard, tray, hotkey, settings, exclusion services
+  Utilities/            Content detectors, app name mapper, image utilities
+  ViewModels/           INPC view models
+  Views/                PopupWindow, SettingsWindow
+tests/CopyTrail.Tests/  Unit tests (358 tests)
+docs/ai/                AI agent working docs
+```
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Security
+
+See [SECURITY.md](SECURITY.md).
+
+## License
+
+MIT — see [LICENSE](LICENSE).
 
 ### Reset the database
 
