@@ -6,6 +6,7 @@ using CopyTrail.Data.Repositories;
 using CopyTrail.Models;
 using CopyTrail.Services;
 using CopyTrail.Views;
+using Microsoft.Win32;
 
 namespace CopyTrail;
 
@@ -43,6 +44,9 @@ public partial class App
         }
 
         base.OnStartup(e);
+
+        ThemeService.Apply(Settings.Theme);
+        SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
 
         var dbContext = InitializeDatabase();
 
@@ -225,8 +229,20 @@ public partial class App
         }, null, (long)duration.TotalMilliseconds, Timeout.Infinite);
     }
 
+    private void OnUserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
+    {
+        if (e.Category == UserPreferenceCategory.General
+            && Settings.Theme == AppTheme.System)
+        {
+            Dispatcher.Invoke(() => ThemeService.Apply(AppTheme.System));
+        }
+    }
+
+    public static void ApplyTheme() => ThemeService.Apply(Settings.Theme);
+
     protected override void OnExit(ExitEventArgs e)
     {
+        SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
         _pauseTimer?.Dispose();
         _popupWindow?.Close();
         _clipboardMonitor?.Dispose();
