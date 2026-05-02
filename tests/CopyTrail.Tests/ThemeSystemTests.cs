@@ -3,7 +3,7 @@ using Xunit;
 
 namespace CopyTrail.Tests;
 
-public class ThemeSystemTests
+public sealed class ThemeSystemTests
 {
     [Fact]
     public void AppSettings_DefaultTheme_IsSystem()

@@ -1,7 +1,5 @@
 ﻿namespace CopyTrail.Models;
 
-public enum AppTheme { System, Dark, Light }
-
 public sealed class AppSettings
 {
     public AppTheme Theme { get; set; } = AppTheme.System;
