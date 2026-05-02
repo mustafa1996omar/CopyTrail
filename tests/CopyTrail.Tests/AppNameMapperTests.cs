@@ -62,11 +62,12 @@ public sealed class AppNameMapperTests
     }
 
     [Fact]
-    public void Resolve_UnknownProcess_HasFallbackColors()
+    public void Resolve_UnknownProcess_HasDerivedAccentColor()
     {
-        var unknown = AppNameMapper.Resolve(null);
         var resolved = AppNameMapper.Resolve("someunknownapp");
-        Assert.Equal(unknown.AccentColorHex, resolved.AccentColorHex);
+        // Unknown apps now get a hash-derived palette color instead of the gray fallback.
+        Assert.Matches(@"^#[0-9A-Fa-f]{6}$", resolved.AccentColorHex);
+        Assert.NotEqual("#64748B", resolved.AccentColorHex);
     }
 
     [Fact]

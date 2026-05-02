@@ -56,6 +56,7 @@ public sealed class ClipboardReaderService
         catch (Exception ex)
         {
             Debug.WriteLine($"[CopyTrail] Unexpected error in clipboard processing: {ex.GetType().Name}");
+            LoggingService.LogError("ClipboardReaderService", "Unexpected error during clipboard processing", ex);
         }
     }
 
@@ -176,6 +177,7 @@ public sealed class ClipboardReaderService
                 else
                 {
                     Debug.WriteLine($"[CopyTrail] Image save failed: {result.ErrorMessage}");
+                    LoggingService.LogError("ClipboardReaderService", $"Image save failed: {result.ErrorMessage}");
                 }
             }
 
@@ -239,6 +241,7 @@ public sealed class ClipboardReaderService
         catch (Exception ex)
         {
             Debug.WriteLine($"[CopyTrail] Storage error: {ex.GetType().Name}: {ex.Message}");
+            LoggingService.LogError("ClipboardReaderService", "Database storage error", ex);
         }
     }
 

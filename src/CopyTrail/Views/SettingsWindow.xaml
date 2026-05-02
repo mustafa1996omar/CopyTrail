@@ -470,7 +470,7 @@
                                     </Grid>
                                 </Border>
                                 <!-- Max history count -->
-                                <Border Style="{StaticResource SettingRowLastStyle}">
+                                <Border Style="{StaticResource SettingRowStyle}">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
@@ -479,7 +479,7 @@
                                         <StackPanel Grid.Column="0">
                                             <TextBlock Text="Max history items"
                                                        Style="{StaticResource SettingLabelStyle}" />
-                                            <TextBlock Text="Oldest items are removed when limit is reached"
+                                            <TextBlock Text="Oldest unpinned items are removed when limit is reached"
                                                        Style="{StaticResource SettingSubLabelStyle}" />
                                         </StackPanel>
                                         <TextBox Grid.Column="1"
@@ -487,6 +487,35 @@
                                                  Style="{StaticResource NumberBoxStyle}"
                                                  Text="{Binding MaxHistoryCount, UpdateSourceTrigger=PropertyChanged}"
                                                  PreviewTextInput="MaxHistoryBox_PreviewTextInput" />
+                                    </Grid>
+                                </Border>
+                                <!-- Max total storage -->
+                                <Border Style="{StaticResource SettingRowLastStyle}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Max total history storage"
+                                                       Style="{StaticResource SettingLabelStyle}" />
+                                            <TextBlock Text="Oldest unpinned items are removed when storage limit is exceeded"
+                                                       Style="{StaticResource SettingSubLabelStyle}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                            <Slider x:Name="MaxStorageSlider"
+                                                    Style="{StaticResource SettingSliderStyle}"
+                                                    Minimum="1" Maximum="50"
+                                                    Value="{Binding MaxStorageGb}"
+                                                    Margin="0,0,10,0" />
+                                            <Border Style="{StaticResource ValueBadgeStyle}" MinWidth="52">
+                                                <TextBlock FontSize="12.5" FontWeight="Medium"
+                                                           Foreground="#374151"
+                                                           HorizontalAlignment="Center">
+                                                    <Run Text="{Binding MaxStorageGb}" /><Run Text=" GB" />
+                                                </TextBlock>
+                                            </Border>
+                                        </StackPanel>
                                     </Grid>
                                 </Border>
                             </StackPanel>
@@ -664,7 +693,26 @@
                                                 Content="Open folder" />
                                     </Grid>
                                 </Border>
-                                <!-- Clear history -->
+                                <!-- Clear unpinned history -->
+                                <Border Style="{StaticResource SettingRowStyle}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Clear unpinned history"
+                                                       Style="{StaticResource SettingLabelStyle}" />
+                                            <TextBlock Text="Delete all entries except pinned items"
+                                                       Style="{StaticResource SettingSubLabelStyle}" />
+                                        </StackPanel>
+                                        <Button Grid.Column="1"
+                                                Style="{StaticResource DestructiveButtonStyle}"
+                                                Click="ClearUnpinnedButton_Click"
+                                                Content="Clear unpinned" />
+                                    </Grid>
+                                </Border>
+                                <!-- Clear all history -->
                                 <Border Style="{StaticResource SettingRowLastStyle}">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -672,15 +720,15 @@
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0">
-                                            <TextBlock Text="Clear clipboard history"
+                                            <TextBlock Text="Clear all history"
                                                        Style="{StaticResource SettingLabelStyle}" />
-                                            <TextBlock Text="Permanently delete all clipboard entries"
+                                            <TextBlock Text="Permanently delete all clipboard entries including pinned"
                                                        Style="{StaticResource SettingSubLabelStyle}" />
                                         </StackPanel>
                                         <Button Grid.Column="1"
                                                 Style="{StaticResource DestructiveButtonStyle}"
                                                 Click="ClearHistoryButton_Click"
-                                                Content="Clear history" />
+                                                Content="Clear all" />
                                     </Grid>
                                 </Border>
                             </StackPanel>

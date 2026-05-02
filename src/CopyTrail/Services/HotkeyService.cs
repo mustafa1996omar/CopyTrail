@@ -37,11 +37,13 @@ internal sealed class HotkeyService : IDisposable
         {
             int error = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
             Debug.WriteLine($"[CopyTrail] Failed to register Alt+V hotkey. Win32 error: {error}. Another app may be using it.");
+            LoggingService.LogWarning("HotkeyService", $"Failed to register Alt+V hotkey. Win32 error: {error}. Another app may be using it.");
             RegistrationFailed?.Invoke(this, EventArgs.Empty);
         }
         else
         {
             Debug.WriteLine("[CopyTrail] Alt+V hotkey registered successfully.");
+            LoggingService.LogInfo("HotkeyService", "Alt+V hotkey registered successfully.");
         }
     }
 

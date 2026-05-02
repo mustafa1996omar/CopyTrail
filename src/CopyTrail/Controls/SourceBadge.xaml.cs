@@ -1,5 +1,7 @@
-﻿using System.Windows;
+using System.IO;
+using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using CopyTrail.Models;
 
 namespace CopyTrail.Controls;
@@ -29,9 +31,36 @@ public partial class SourceBadge
 
     private void Apply(SourceVisualIdentity identity)
     {
-        var color = (Color)ColorConverter.ConvertFromString(identity.AccentColorHex);
-        InitialCircle.Background = new SolidColorBrush(color);
-        InitialText.Text = identity.Initial;
         AppNameText.Text = identity.AppName;
+
+        if (!string.IsNullOrEmpty(identity.IconPath) && File.Exists(identity.IconPath))
+        {
+            try
+            {
+                var bitmapImage = new BitmapImage();
+                bitmapImage.BeginInit();
+                bitmapImage.UriSource = new Uri(identity.IconPath, UriKind.Absolute);
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapImage.DecodePixelWidth = 24;
+                bitmapImage.EndInit();
+                bitmapImage.Freeze();
+
+                IconImage.Source = bitmapImage;
+                IconBorder.Visibility = Visibility.Visible;
+                InitialCircle.Visibility = Visibility.Collapsed;
+                return;
+            }
+            catch
+            {
+                // Fall through to initial-circle fallback.
+            }
+        }
+
+        // Fallback: colored circle with initial.
+        var accentColor = (Color)ColorConverter.ConvertFromString(identity.AccentColorHex);
+        InitialCircle.Background = new SolidColorBrush(accentColor);
+        InitialText.Text = identity.Initial;
+        IconBorder.Visibility = Visibility.Collapsed;
+        InitialCircle.Visibility = Visibility.Visible;
     }
 }

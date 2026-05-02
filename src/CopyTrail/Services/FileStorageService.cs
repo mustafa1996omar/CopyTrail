@@ -55,6 +55,7 @@ public sealed class FileStorageService
         }
         catch (Exception ex)
         {
+            LoggingService.LogError("FileStorageService", "Image save failed", ex);
             return StoredImageResult.Failed(ex.Message);
         }
     }

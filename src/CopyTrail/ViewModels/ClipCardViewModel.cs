@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Windows.Media;
 using CopyTrail.Converters;
 using CopyTrail.Data;
@@ -23,6 +25,11 @@ public sealed class ClipCardViewModel : INotifyPropertyChanged
     public bool IsLargeContent { get; init; }
     public string? ThumbnailPath { get; init; }
     public bool IsImageCard { get; init; }
+    public bool IsCodeCard { get; init; }
+    public bool IsColorCard { get; init; }
+    public bool IsUrlCard { get; init; }
+    public SolidColorBrush? ColorSwatchBrush { get; init; }
+    public string? UrlDomain { get; init; }
     public string? SourceWindowTitle { get; init; }
     public string? SourceProcessName { get; init; }
 
@@ -61,16 +68,30 @@ public sealed class ClipCardViewModel : INotifyPropertyChanged
         var content = record.Content;
         var evt = record.Event;
 
-        var identity = AppNameMapper.Resolve(evt.SourceProcessName ?? "");
+        var identity = App.IdentityService.GetIdentity(evt.SourceProcessName, evt.SourceProcessPath);
         var (badgeBg, badgeFg) = GetBadgeColors(content.Kind);
         string badgeLabel = GetBadgeLabel(content.Kind);
 
         bool isImage = content.Kind == ClipboardItemKind.Image ||
                        content.Kind == ClipboardItemKind.Screenshot;
+        bool isCode = content.Kind == ClipboardItemKind.Code ||
+                      content.Kind == ClipboardItemKind.Json ||
+                      content.Kind == ClipboardItemKind.TerminalCommand;
+        bool isColor = content.Kind == ClipboardItemKind.ColorValue;
+        bool isUrl = content.Kind == ClipboardItemKind.Url;
 
         string preview = isImage
             ? BuildImagePreview(content)
-            : content.PreviewText ?? content.PlainText ?? "";
+            : BuildTextPreview(content);
+
+        SolidColorBrush? colorSwatch = isColor ? BuildColorSwatch(content.PlainText) : null;
+
+        string? urlDomain = null;
+        if (isUrl && content.Url is not null &&
+            Uri.TryCreate(content.Url, UriKind.Absolute, out var parsedUri))
+        {
+            urlDomain = parsedUri.Host;
+        }
 
         string copiedAt = RelativeTimeConverter.ToRelative(evt.LastCopiedAtUtc);
         string copiedAtAbsolute = evt.LastCopiedAtUtc.ToLocalTime().ToString("g");
@@ -89,6 +110,11 @@ public sealed class ClipCardViewModel : INotifyPropertyChanged
             IsLargeContent = content.IsLargeContent,
             ThumbnailPath = content.ThumbnailPath,
             IsImageCard = isImage,
+            IsCodeCard = isCode,
+            IsColorCard = isColor,
+            IsUrlCard = isUrl,
+            ColorSwatchBrush = colorSwatch,
+            UrlDomain = urlDomain,
             SourceWindowTitle = evt.SourceWindowTitle,
             SourceProcessName = evt.SourceProcessName,
             AccentBrush = BrushFromHex(identity.AccentColorHex),
@@ -103,6 +129,46 @@ public sealed class ClipCardViewModel : INotifyPropertyChanged
         if (content.ThumbnailPath is not null)
             return "";
         return content.Kind == ClipboardItemKind.Screenshot ? "Screenshot" : "Image";
+    }
+
+    private static string BuildTextPreview(ClipboardContent content) => content.Kind switch
+    {
+        ClipboardItemKind.TerminalCommand => "$ " + (content.PlainText?.TrimEnd() ?? ""),
+        ClipboardItemKind.Json => content.JsonText ?? content.PlainText ?? "",
+        ClipboardItemKind.Url => content.Url ?? content.PlainText ?? "",
+        ClipboardItemKind.FileReference => BuildFilePreview(content.FileReferenceJson),
+        ClipboardItemKind.Svg => StripTags(content.SvgText ?? content.PlainText ?? ""),
+        _ => content.PreviewText ?? content.PlainText ?? ""
+    };
+
+    private static string BuildFilePreview(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return "";
+        try
+        {
+            var paths = JsonSerializer.Deserialize<List<string>>(json);
+            if (paths is null || paths.Count == 0) return "";
+            string first = System.IO.Path.GetFileName(paths[0]);
+            return paths.Count == 1 ? first : $"{first} (+{paths.Count - 1} more)";
+        }
+        catch { return ""; }
+    }
+
+    private static string StripTags(string text) =>
+        Regex.Replace(text, @"<[^>]+>", " ").Replace("  ", " ").Trim();
+
+    private static SolidColorBrush BuildColorSwatch(string? colorValue)
+    {
+        if (!string.IsNullOrWhiteSpace(colorValue))
+        {
+            try
+            {
+                var color = (Color)ColorConverter.ConvertFromString(colorValue.Trim());
+                return new SolidColorBrush(color);
+            }
+            catch { }
+        }
+        return new SolidColorBrush(Colors.Gray);
     }
 
     public static string GetBadgeLabel(ClipboardItemKind kind) => kind switch

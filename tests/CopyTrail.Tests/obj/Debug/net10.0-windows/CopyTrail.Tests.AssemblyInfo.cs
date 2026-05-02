@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CopyTrail.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+41633a1e549a12210184c707164f8b27e3489633")]
 [assembly: System.Reflection.AssemblyProductAttribute("CopyTrail.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CopyTrail.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

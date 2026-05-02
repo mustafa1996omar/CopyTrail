@@ -5,7 +5,7 @@
         xmlns:converters="clr-namespace:CopyTrail.Converters"
         xmlns:vm="clr-namespace:CopyTrail.ViewModels"
         Title="CopyTrail"
-        Width="1020" Height="540"
+        Width="472" Height="652"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -170,12 +170,13 @@
                             Background="#F9FAFB"
                             BorderBrush="#E5E7EB"
                             BorderThickness="1"
-                            Padding="12,0,12,0"
+                            Padding="12,0,8,0"
                             VerticalAlignment="Center">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0"
                                        Text="⌕"
@@ -197,6 +198,19 @@
                                          Height="38"
                                          TextChanged="SearchBox_TextChanged" />
                             </Grid>
+                            <!-- Clear search (×) button — visible only when search has text -->
+                            <Button Grid.Column="2"
+                                    x:Name="SearchClearButton"
+                                    Content="×"
+                                    FontSize="16"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Foreground="#9CA3AF"
+                                    Padding="4,0,4,0"
+                                    Cursor="Hand"
+                                    ToolTip="Clear search"
+                                    Visibility="{Binding HasSearchText, Converter={StaticResource BoolToVis}}"
+                                    Click="SearchClearButton_Click" />
                         </Grid>
                     </Border>
 
@@ -216,49 +230,67 @@
                 <!-- Header separator -->
                 <Rectangle Grid.Row="1" Fill="#F1F5F9" />
 
-                <!-- ── Filter chips ── -->
-                <ScrollViewer Grid.Row="2"
-                              HorizontalScrollBarVisibility="Hidden"
-                              VerticalScrollBarVisibility="Disabled"
-                              Margin="20,0,20,0">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border x:Name="ChipBorderAll" Style="{StaticResource ChipSelectedStyle}"
-                                MouseLeftButtonUp="ChipAll_MouseUp">
-                            <TextBlock x:Name="ChipTextAll" Text="All"
-                                       Style="{StaticResource ChipTextSelectedStyle}" />
-                        </Border>
-                        <Border x:Name="ChipBorderText" Style="{StaticResource ChipStyle}"
-                                MouseLeftButtonUp="ChipText_MouseUp">
-                            <TextBlock x:Name="ChipTextText" Text="Text"
-                                       Style="{StaticResource ChipTextStyle}" />
-                        </Border>
-                        <Border x:Name="ChipBorderLinks" Style="{StaticResource ChipStyle}"
-                                MouseLeftButtonUp="ChipLinks_MouseUp">
-                            <TextBlock x:Name="ChipTextLinks" Text="Links"
-                                       Style="{StaticResource ChipTextStyle}" />
-                        </Border>
-                        <Border x:Name="ChipBorderCode" Style="{StaticResource ChipStyle}"
-                                MouseLeftButtonUp="ChipCode_MouseUp">
-                            <TextBlock x:Name="ChipTextCode" Text="Code"
-                                       Style="{StaticResource ChipTextStyle}" />
-                        </Border>
-                        <Border x:Name="ChipBorderImages" Style="{StaticResource ChipStyle}"
-                                MouseLeftButtonUp="ChipImages_MouseUp">
-                            <TextBlock x:Name="ChipTextImages" Text="Images"
-                                       Style="{StaticResource ChipTextStyle}" />
-                        </Border>
-                        <Border x:Name="ChipBorderFiles" Style="{StaticResource ChipStyle}"
-                                MouseLeftButtonUp="ChipFiles_MouseUp">
-                            <TextBlock x:Name="ChipTextFiles" Text="Files"
-                                       Style="{StaticResource ChipTextStyle}" />
-                        </Border>
-                        <Border x:Name="ChipBorderColors" Style="{StaticResource ChipStyle}"
-                                MouseLeftButtonUp="ChipColors_MouseUp">
-                            <TextBlock x:Name="ChipTextColors" Text="Colors"
-                                       Style="{StaticResource ChipTextStyle}" />
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
+                <!-- ── Filter chips + result count ── -->
+                <Grid Grid.Row="2" Margin="20,0,20,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ScrollViewer Grid.Column="0"
+                                  HorizontalScrollBarVisibility="Hidden"
+                                  VerticalScrollBarVisibility="Disabled">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border x:Name="ChipBorderAll" Style="{StaticResource ChipSelectedStyle}"
+                                    MouseLeftButtonUp="ChipAll_MouseUp">
+                                <TextBlock x:Name="ChipTextAll" Text="All"
+                                           Style="{StaticResource ChipTextSelectedStyle}" />
+                            </Border>
+                            <Border x:Name="ChipBorderText" Style="{StaticResource ChipStyle}"
+                                    MouseLeftButtonUp="ChipText_MouseUp">
+                                <TextBlock x:Name="ChipTextText" Text="Text"
+                                           Style="{StaticResource ChipTextStyle}" />
+                            </Border>
+                            <Border x:Name="ChipBorderLinks" Style="{StaticResource ChipStyle}"
+                                    MouseLeftButtonUp="ChipLinks_MouseUp">
+                                <TextBlock x:Name="ChipTextLinks" Text="Links"
+                                           Style="{StaticResource ChipTextStyle}" />
+                            </Border>
+                            <Border x:Name="ChipBorderCode" Style="{StaticResource ChipStyle}"
+                                    MouseLeftButtonUp="ChipCode_MouseUp">
+                                <TextBlock x:Name="ChipTextCode" Text="Code"
+                                           Style="{StaticResource ChipTextStyle}" />
+                            </Border>
+                            <Border x:Name="ChipBorderImages" Style="{StaticResource ChipStyle}"
+                                    MouseLeftButtonUp="ChipImages_MouseUp">
+                                <TextBlock x:Name="ChipTextImages" Text="Images"
+                                           Style="{StaticResource ChipTextStyle}" />
+                            </Border>
+                            <Border x:Name="ChipBorderFiles" Style="{StaticResource ChipStyle}"
+                                    MouseLeftButtonUp="ChipFiles_MouseUp">
+                                <TextBlock x:Name="ChipTextFiles" Text="Files"
+                                           Style="{StaticResource ChipTextStyle}" />
+                            </Border>
+                            <Border x:Name="ChipBorderColors" Style="{StaticResource ChipStyle}"
+                                    MouseLeftButtonUp="ChipColors_MouseUp">
+                                <TextBlock x:Name="ChipTextColors" Text="Colors"
+                                           Style="{StaticResource ChipTextStyle}" />
+                            </Border>
+                            <Border x:Name="ChipBorderPinned" Style="{StaticResource ChipStyle}"
+                                    MouseLeftButtonUp="ChipPinned_MouseUp">
+                                <TextBlock x:Name="ChipTextPinned" Text="📌 Pinned"
+                                           Style="{StaticResource ChipTextStyle}" />
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                    <!-- Result count — visible only when search or filter is active -->
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding ResultCount, StringFormat='{}{0} result(s)'}"
+                               FontSize="11"
+                               Foreground="#9CA3AF"
+                               VerticalAlignment="Center"
+                               Margin="8,0,0,0"
+                               Visibility="{Binding IsSearchActive, Converter={StaticResource BoolToVis}}" />
+                </Grid>
 
                 <!-- ── Capture paused indicator ── -->
                 <Border x:Name="PausedBanner"
@@ -305,12 +337,11 @@
                 <!-- ── Card area ── -->
                 <Grid Grid.Row="5">
 
-                    <!-- Real cards -->
-                    <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                                  VerticalScrollBarVisibility="Disabled"
-                                  Padding="20,12,20,12"
-                                  Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis},
-                                               ConverterParameter=Inverse}">
+                    <!-- Real cards — pinned section then regular section (vertical scroll) -->
+                    <ScrollViewer x:Name="CardsScrollViewer"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  Padding="16,12,16,12">
                         <ScrollViewer.Style>
                             <Style TargetType="ScrollViewer">
                                 <Setter Property="Visibility" Value="Visible" />
@@ -321,18 +352,71 @@
                                 </Style.Triggers>
                             </Style>
                         </ScrollViewer.Style>
-                        <ItemsControl ItemsSource="{Binding Cards}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate DataType="{x:Type vm:ClipCardViewModel}">
-                                    <controls:ClipCard Margin="0,0,12,0" />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                        <StackPanel Orientation="Vertical">
+
+                            <!-- Pinned section: visible only when there are pinned cards -->
+                            <StackPanel Orientation="Vertical">
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasPinnedCards}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <TextBlock Text="📌 Pinned"
+                                           FontSize="10.5" FontWeight="SemiBold"
+                                           Foreground="#6B7280"
+                                           Margin="0,0,0,8" />
+                                <ItemsControl x:Name="PinnedItemsControl" ItemsSource="{Binding PinnedCards}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Vertical" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type vm:ClipCardViewModel}">
+                                            <controls:ClipCard Margin="0,0,0,8" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+
+                            <!-- Section divider: visible when both sections have cards -->
+                            <Rectangle Height="1" Fill="#E5E7EB" Margin="0,4,0,12">
+                                <Rectangle.Style>
+                                    <Style TargetType="Rectangle">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding HasPinnedCards}" Value="True" />
+                                                    <Condition Binding="{Binding HasRegularCards}" Value="True" />
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </MultiDataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Rectangle.Style>
+                            </Rectangle>
+
+                            <!-- Regular (unpinned) cards -->
+                            <ItemsControl x:Name="RegularItemsControl" ItemsSource="{Binding RegularCards}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Vertical" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type vm:ClipCardViewModel}">
+                                        <controls:ClipCard Margin="0,0,0,8" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                        </StackPanel>
                     </ScrollViewer>
 
                     <!-- Loading state -->
@@ -342,13 +426,13 @@
                                VerticalAlignment="Center"
                                Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}" />
 
-                    <!-- Empty state -->
+                    <!-- Empty state: history is empty (nothing ever copied) -->
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                         <StackPanel.Style>
                             <Style TargetType="StackPanel">
                                 <Setter Property="Visibility" Value="Collapsed" />
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsEmpty}" Value="True">
+                                    <DataTrigger Binding="{Binding IsHistoryEmpty}" Value="True">
                                         <Setter Property="Visibility" Value="Visible" />
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -359,6 +443,27 @@
                                    HorizontalAlignment="Center"
                                    Margin="0,0,0,12" />
                         <TextBlock Text="Copy something to see it here"
+                                   FontSize="14" Foreground="#9CA3AF"
+                                   HorizontalAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- Empty state: search/filter returned no results -->
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsFilteredEmpty}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock Text="🔍"
+                                   FontSize="32"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,12" />
+                        <TextBlock Text="No matching clips"
                                    FontSize="14" Foreground="#9CA3AF"
                                    HorizontalAlignment="Center" />
                     </StackPanel>
@@ -374,12 +479,14 @@
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center">
                     <TextBlock FontSize="11" Foreground="#9CA3AF">
-                        <Run FontWeight="SemiBold" Foreground="#6B7280">← →</Run>
+                        <Run FontWeight="SemiBold" Foreground="#6B7280">↑ ↓</Run>
                         <Run> Navigate  </Run>
                         <Run FontWeight="SemiBold" Foreground="#6B7280">Enter</Run>
                         <Run> Paste  </Run>
                         <Run FontWeight="SemiBold" Foreground="#6B7280">Ctrl+Enter</Run>
                         <Run> Copy only  </Run>
+                        <Run FontWeight="SemiBold" Foreground="#6B7280">P</Run>
+                        <Run> Pin  </Run>
                         <Run FontWeight="SemiBold" Foreground="#6B7280">Ctrl+F</Run>
                         <Run> Search  </Run>
                         <Run FontWeight="SemiBold" Foreground="#6B7280">Esc</Run>

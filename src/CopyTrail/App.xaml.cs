@@ -26,6 +26,10 @@ public partial class App
     public static ClipboardRepository? Repository { get; private set; }
     public static ClipboardReaderService? ClipboardReader { get; private set; }
     public static PasteService? PasteService { get; private set; }
+    public static CleanupService? CleanupService { get; private set; }
+    public static FileStorageService? FileStorage { get; private set; }
+    public static AppIconService IconService { get; } = new();
+    public static SourceVisualIdentityService IdentityService { get; } = new(IconService);
     public static bool IsCaptureActive { get; private set; } = true;
 
     protected override void OnStartup(StartupEventArgs e)
@@ -48,17 +52,23 @@ public partial class App
 
             var classifier = new ContentClassifierService();
             var sourceCapture = new SourceCaptureService();
-            var fileStorage = new FileStorageService(Settings);
+            FileStorage = new FileStorageService(Settings);
             var exclusion = new ExclusionService(Settings);
 
             ClipboardReader = new ClipboardReaderService(
-                Repository, classifier, sourceCapture, fileStorage, exclusion, Settings);
+                Repository, classifier, sourceCapture, FileStorage, exclusion, Settings);
+
+            CleanupService = new CleanupService(Repository, FileStorage);
+
+            ClipboardReader.ItemStored += OnItemStored;
 
             _clipboardMonitor = new ClipboardMonitorService();
             _clipboardMonitor.ClipboardChanged += ClipboardReader.OnClipboardChanged;
             _clipboardMonitor.Initialize();
 
             PasteService = new PasteService(_clipboardMonitor);
+
+            _ = Task.Run(() => CleanupService.RunStartupCleanupAsync());
         }
         else
         {
@@ -150,10 +160,16 @@ public partial class App
         win.ShowDialog();
     }
 
+    private void OnItemStored(object? sender, EventArgs e)
+    {
+        if (CleanupService is not null)
+            _ = Task.Run(() => CleanupService.RunAfterCaptureAsync(Settings));
+    }
+
     private async void OnClearHistoryRequested(object? sender, EventArgs e)
     {
         var result = System.Windows.MessageBox.Show(
-            "Clear all clipboard history? This cannot be undone.",
+            "Clear clipboard history? Pinned items will be kept.",
             "CopyTrail",
             System.Windows.MessageBoxButton.YesNo,
             System.Windows.MessageBoxImage.Warning,
@@ -162,7 +178,15 @@ public partial class App
         if (result != System.Windows.MessageBoxResult.Yes) return;
         if (Repository is null) return;
 
-        await Repository.ClearAllAsync();
+        var imagePaths = await Repository.GetUnpinnedImagePathsAsync();
+        await Repository.ClearAllAsync(keepPinned: true);
+
+        if (FileStorage is not null)
+        {
+            foreach (var path in imagePaths)
+                FileStorage.DeleteMediaFileIfExists(path);
+        }
+
         _popupWindow?.RefreshAsync();
     }
 

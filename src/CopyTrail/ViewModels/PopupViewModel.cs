@@ -2,14 +2,16 @@
 using System.ComponentModel;
 using CopyTrail.Data.Repositories;
 using CopyTrail.Models;
+using CopyTrail.Services;
 
 namespace CopyTrail.ViewModels;
 
-public enum FilterKind { All, Text, Links, Code, Images, Files, Colors }
+public enum FilterKind { All, Text, Links, Code, Images, Files, Colors, Pinned }
 
 public sealed class PopupViewModel : INotifyPropertyChanged
 {
     private readonly ClipboardRepository? _repository;
+    private readonly CleanupService? _cleanupService;
     private readonly AppSettings _settings;
     private List<ClipCardViewModel> _allCards = [];
     private string _searchText = "";
@@ -27,6 +29,8 @@ public sealed class PopupViewModel : INotifyPropertyChanged
         {
             _searchText = value;
             OnPropertyChanged(nameof(SearchText));
+            OnPropertyChanged(nameof(HasSearchText));
+            OnPropertyChanged(nameof(IsSearchActive));
             ApplyFilterAndSearch();
         }
     }
@@ -38,6 +42,7 @@ public sealed class PopupViewModel : INotifyPropertyChanged
         {
             _selectedFilter = value;
             OnPropertyChanged(nameof(SelectedFilter));
+            OnPropertyChanged(nameof(IsSearchActive));
             ApplyFilterAndSearch();
         }
     }
@@ -54,6 +59,17 @@ public sealed class PopupViewModel : INotifyPropertyChanged
         private set { _isEmpty = value; OnPropertyChanged(nameof(IsEmpty)); }
     }
 
+    public bool HasSearchText => !string.IsNullOrWhiteSpace(_searchText);
+    public bool IsSearchActive => HasSearchText || _selectedFilter != FilterKind.All;
+    public bool IsHistoryEmpty => IsEmpty && !IsSearchActive;
+    public bool IsFilteredEmpty => IsEmpty && IsSearchActive;
+    public int ResultCount => Cards.Count;
+
+    public IEnumerable<ClipCardViewModel> PinnedCards => Cards.Where(c => c.IsPinned);
+    public IEnumerable<ClipCardViewModel> RegularCards => Cards.Where(c => !c.IsPinned);
+    public bool HasPinnedCards => Cards.Any(c => c.IsPinned);
+    public bool HasRegularCards => Cards.Any(c => !c.IsPinned);
+
     public int SelectedIndex
     {
         get => _selectedIndex;
@@ -63,10 +79,11 @@ public sealed class PopupViewModel : INotifyPropertyChanged
     public ClipCardViewModel? SelectedCard =>
         _selectedIndex >= 0 && _selectedIndex < Cards.Count ? Cards[_selectedIndex] : null;
 
-    public PopupViewModel(ClipboardRepository? repository, AppSettings settings)
+    public PopupViewModel(ClipboardRepository? repository, AppSettings settings, CleanupService? cleanupService = null)
     {
         _repository = repository;
         _settings = settings;
+        _cleanupService = cleanupService;
     }
 
     public async Task LoadAsync()
@@ -142,6 +159,47 @@ public sealed class PopupViewModel : INotifyPropertyChanged
         SelectedFilter = kind;
     }
 
+    public async Task TogglePinAsync(ClipCardViewModel vm)
+    {
+        if (_repository is null || vm.Content is null) return;
+
+        bool nowPinned = !vm.IsPinned;
+        vm.IsPinned = nowPinned;
+        vm.Content.IsPinned = nowPinned;
+
+        NotifyPinnedSectionChanged();
+
+        if (nowPinned)
+            await _repository.PinContentAsync(vm.Content.Id).ConfigureAwait(true);
+        else
+            await _repository.UnpinContentAsync(vm.Content.Id).ConfigureAwait(true);
+    }
+
+    public async Task DeleteCardAsync(ClipCardViewModel vm)
+    {
+        if (_cleanupService is null || vm.Content is null) return;
+
+        await _cleanupService.DeleteItemAsync(vm.Content.Id, vm.Content.ImagePath, vm.Content.ThumbnailPath)
+            .ConfigureAwait(true);
+
+        _allCards.Remove(vm);
+        Cards.Remove(vm);
+
+        IsEmpty = Cards.Count == 0 && !IsLoading;
+        OnPropertyChanged(nameof(ResultCount));
+        OnPropertyChanged(nameof(IsHistoryEmpty));
+        OnPropertyChanged(nameof(IsFilteredEmpty));
+        NotifyPinnedSectionChanged();
+    }
+
+    private void NotifyPinnedSectionChanged()
+    {
+        OnPropertyChanged(nameof(PinnedCards));
+        OnPropertyChanged(nameof(RegularCards));
+        OnPropertyChanged(nameof(HasPinnedCards));
+        OnPropertyChanged(nameof(HasRegularCards));
+    }
+
     private void ApplyFilterAndSearch()
     {
         IEnumerable<ClipCardViewModel> filtered = _allCards;
@@ -163,6 +221,10 @@ public sealed class PopupViewModel : INotifyPropertyChanged
         // Reset selection; no card is pre-selected after a filter/search change
         SelectedIndex = -1;
         IsEmpty = Cards.Count == 0 && !IsLoading;
+        OnPropertyChanged(nameof(ResultCount));
+        OnPropertyChanged(nameof(IsHistoryEmpty));
+        OnPropertyChanged(nameof(IsFilteredEmpty));
+        NotifyPinnedSectionChanged();
     }
 
     private static bool MatchesFilter(ClipCardViewModel card, FilterKind filter) => filter switch
@@ -177,6 +239,7 @@ public sealed class PopupViewModel : INotifyPropertyChanged
         FilterKind.Images => card.Kind is ClipboardItemKind.Image or ClipboardItemKind.Screenshot,
         FilterKind.Files => card.Kind == ClipboardItemKind.FileReference,
         FilterKind.Colors => card.Kind == ClipboardItemKind.ColorValue,
+        FilterKind.Pinned => card.IsPinned,
         _ => true
     };
 
@@ -188,7 +251,9 @@ public sealed class PopupViewModel : INotifyPropertyChanged
         return card.Preview.Contains(q, StringComparison.OrdinalIgnoreCase) ||
                card.Source.AppName.Contains(q, StringComparison.OrdinalIgnoreCase) ||
                (card.SourceWindowTitle?.Contains(q, StringComparison.OrdinalIgnoreCase) == true) ||
-               card.ContentKind.Contains(q, StringComparison.OrdinalIgnoreCase);
+               card.ContentKind.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+               (card.Content?.PlainText?.Contains(q, StringComparison.OrdinalIgnoreCase) == true) ||
+               (card.Content?.Url?.Contains(q, StringComparison.OrdinalIgnoreCase) == true);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

@@ -128,3 +128,4 @@ C:\Users\MustafaAlKhalidi\Documents\Projects\CopyTrail\tests\CopyTrail.Tests\obj
 C:\Users\MustafaAlKhalidi\Documents\Projects\CopyTrail\tests\CopyTrail.Tests\obj\Debug\net10.0-windows\CopyTrail.Tests.pdb
 C:\Users\MustafaAlKhalidi\Documents\Projects\CopyTrail\tests\CopyTrail.Tests\obj\Debug\net10.0-windows\CopyTrail.Tests.genruntimeconfig.cache
 C:\Users\MustafaAlKhalidi\Documents\Projects\CopyTrail\tests\CopyTrail.Tests\obj\Debug\net10.0-windows\ref\CopyTrail.Tests.dll
+C:\Users\MustafaAlKhalidi\Documents\Projects\CopyTrail\tests\CopyTrail.Tests\obj\Debug\net10.0-windows\CopyTrail.Tests.sourcelink.json

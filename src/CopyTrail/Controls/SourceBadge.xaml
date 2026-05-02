@@ -1,11 +1,23 @@
-﻿<UserControl x:Class="CopyTrail.Controls.SourceBadge"
+<UserControl x:Class="CopyTrail.Controls.SourceBadge"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-        <!-- Colored circle with initial letter -->
+        <!-- App icon image (shown when icon is available) -->
+        <Border x:Name="IconBorder"
+                Width="24" Height="24"
+                CornerRadius="5"
+                ClipToBounds="True"
+                VerticalAlignment="Center"
+                Visibility="Collapsed">
+            <Image x:Name="IconImage"
+                   Width="24" Height="24"
+                   Stretch="Uniform"
+                   RenderOptions.BitmapScalingMode="HighQuality" />
+        </Border>
+        <!-- Colored circle with initial letter (fallback when no icon) -->
         <Border x:Name="InitialCircle"
-                Width="26" Height="26"
-                CornerRadius="13"
+                Width="24" Height="24"
+                CornerRadius="12"
                 VerticalAlignment="Center">
             <TextBlock x:Name="InitialText"
                        FontSize="11" FontWeight="Bold"
@@ -15,7 +27,7 @@
         </Border>
         <!-- App name -->
         <TextBlock x:Name="AppNameText"
-                   FontSize="12" FontWeight="Medium"
+                   FontSize="12" FontWeight="SemiBold"
                    Foreground="#374151"
                    Margin="7,0,0,0"
                    VerticalAlignment="Center"

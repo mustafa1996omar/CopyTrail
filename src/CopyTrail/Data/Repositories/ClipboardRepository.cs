@@ -194,17 +194,221 @@ public sealed class ClipboardRepository
         await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
     }
 
-    public async Task ClearAllAsync()
+    public async Task PinContentAsync(long contentId)
+    {
+        using var connection = _context.CreateConnection();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "UPDATE ClipboardContents SET IsPinned = 1 WHERE Id = @Id;";
+        cmd.Parameters.AddWithValue("@Id", contentId);
+        await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
+    }
+
+    public async Task UnpinContentAsync(long contentId)
+    {
+        using var connection = _context.CreateConnection();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "UPDATE ClipboardContents SET IsPinned = 0 WHERE Id = @Id;";
+        cmd.Parameters.AddWithValue("@Id", contentId);
+        await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
+    }
+
+    public async Task<List<TimelineItemRecord>> GetPinnedItemsAsync()
+    {
+        using var connection = _context.CreateConnection();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+            SELECT
+                c.Id, c.ContentHash, c.Kind, c.PlainText, c.HtmlText, c.RichText,
+                c.MarkdownText, c.JsonText, c.SvgText, c.Url, c.ImagePath, c.ThumbnailPath,
+                c.FileReferenceJson, c.PreviewText, c.SizeBytes, c.IsLargeContent,
+                c.IsSensitive, c.IsPinned, c.CreatedAtUtc,
+                e.Id, e.ClipboardContentId, e.SourceAppName, e.SourceProcessName,
+                e.SourceProcessPath, e.SourceWindowTitle, e.SourceKind,
+                e.CopiedAtUtc, e.CopyCount, e.LastCopiedAtUtc
+            FROM ClipboardEvents e
+            INNER JOIN ClipboardContents c ON c.Id = e.ClipboardContentId
+            WHERE c.IsPinned = 1
+            ORDER BY e.CopiedAtUtc DESC;
+            """;
+
+        return await ReadTimelineItemsAsync(cmd).ConfigureAwait(false);
+    }
+
+    public async Task ClearAllAsync(bool keepPinned = false)
+    {
+        using var connection = _context.CreateConnection();
+
+        string pinnedFilter = keepPinned
+            ? " WHERE ClipboardContentId NOT IN (SELECT Id FROM ClipboardContents WHERE IsPinned = 1)"
+            : "";
+        string contentFilter = keepPinned ? " WHERE IsPinned = 0" : "";
+
+        using var eventsCmd = connection.CreateCommand();
+        eventsCmd.CommandText = $"DELETE FROM ClipboardEvents{pinnedFilter};";
+        await eventsCmd.ExecuteNonQueryAsync().ConfigureAwait(false);
+
+        using var contentCmd = connection.CreateCommand();
+        contentCmd.CommandText = $"DELETE FROM ClipboardContents{contentFilter};";
+        await contentCmd.ExecuteNonQueryAsync().ConfigureAwait(false);
+    }
+
+    public async Task DeleteContentAsync(long contentId)
     {
         using var connection = _context.CreateConnection();
 
         using var eventsCmd = connection.CreateCommand();
-        eventsCmd.CommandText = "DELETE FROM ClipboardEvents;";
+        eventsCmd.CommandText = "DELETE FROM ClipboardEvents WHERE ClipboardContentId = @Id;";
+        eventsCmd.Parameters.AddWithValue("@Id", contentId);
         await eventsCmd.ExecuteNonQueryAsync().ConfigureAwait(false);
 
         using var contentCmd = connection.CreateCommand();
-        contentCmd.CommandText = "DELETE FROM ClipboardContents;";
+        contentCmd.CommandText = "DELETE FROM ClipboardContents WHERE Id = @Id;";
+        contentCmd.Parameters.AddWithValue("@Id", contentId);
         await contentCmd.ExecuteNonQueryAsync().ConfigureAwait(false);
+    }
+
+    public async Task<List<(string? ImagePath, string? ThumbnailPath)>> EnforceCountLimitAsync(int maxCount)
+    {
+        using var connection = _context.CreateConnection();
+
+        using var countCmd = connection.CreateCommand();
+        countCmd.CommandText = "SELECT COUNT(*) FROM ClipboardContents WHERE IsPinned = 0;";
+        var countResult = await countCmd.ExecuteScalarAsync().ConfigureAwait(false);
+        long currentCount = Convert.ToInt64(countResult);
+
+        if (currentCount <= maxCount)
+            return [];
+
+        long excess = currentCount - maxCount;
+
+        var toDelete = new List<(long id, string? img, string? thumb)>();
+        using var selectCmd = connection.CreateCommand();
+        selectCmd.CommandText = """
+            SELECT Id, ImagePath, ThumbnailPath
+            FROM ClipboardContents
+            WHERE IsPinned = 0
+            ORDER BY CreatedAtUtc ASC
+            LIMIT @Excess;
+            """;
+        selectCmd.Parameters.AddWithValue("@Excess", excess);
+
+        using (var reader = await selectCmd.ExecuteReaderAsync().ConfigureAwait(false))
+        {
+            while (await reader.ReadAsync().ConfigureAwait(false))
+            {
+                toDelete.Add((
+                    reader.GetInt64(0),
+                    reader.IsDBNull(1) ? null : reader.GetString(1),
+                    reader.IsDBNull(2) ? null : reader.GetString(2)));
+            }
+        }
+
+        if (toDelete.Count == 0) return [];
+
+        string ids = string.Join(",", toDelete.Select(x => x.id));
+        using var eventsCmd = connection.CreateCommand();
+        eventsCmd.CommandText = $"DELETE FROM ClipboardEvents WHERE ClipboardContentId IN ({ids});";
+        await eventsCmd.ExecuteNonQueryAsync().ConfigureAwait(false);
+
+        using var contentCmd = connection.CreateCommand();
+        contentCmd.CommandText = $"DELETE FROM ClipboardContents WHERE Id IN ({ids});";
+        await contentCmd.ExecuteNonQueryAsync().ConfigureAwait(false);
+
+        return toDelete.Select(x => (x.img, x.thumb)).ToList();
+    }
+
+    public async Task<List<(string? ImagePath, string? ThumbnailPath)>> EnforceStorageLimitAsync(long maxStorageBytes)
+    {
+        using var connection = _context.CreateConnection();
+
+        using var totalCmd = connection.CreateCommand();
+        totalCmd.CommandText = "SELECT COALESCE(SUM(SizeBytes), 0) FROM ClipboardContents WHERE IsPinned = 0;";
+        var totalResult = await totalCmd.ExecuteScalarAsync().ConfigureAwait(false);
+        long totalBytes = Convert.ToInt64(totalResult);
+
+        if (totalBytes <= maxStorageBytes)
+            return [];
+
+        var candidates = new List<(long id, string? img, string? thumb, long size)>();
+        using var selectCmd = connection.CreateCommand();
+        selectCmd.CommandText = """
+            SELECT Id, ImagePath, ThumbnailPath, SizeBytes
+            FROM ClipboardContents
+            WHERE IsPinned = 0
+            ORDER BY CreatedAtUtc ASC;
+            """;
+
+        using (var reader = await selectCmd.ExecuteReaderAsync().ConfigureAwait(false))
+        {
+            while (await reader.ReadAsync().ConfigureAwait(false))
+            {
+                candidates.Add((
+                    reader.GetInt64(0),
+                    reader.IsDBNull(1) ? null : reader.GetString(1),
+                    reader.IsDBNull(2) ? null : reader.GetString(2),
+                    reader.GetInt64(3)));
+            }
+        }
+
+        var toDelete = new List<(long id, string? img, string? thumb)>();
+        long running = totalBytes;
+        foreach (var item in candidates)
+        {
+            if (running <= maxStorageBytes) break;
+            toDelete.Add((item.id, item.img, item.thumb));
+            running -= item.size;
+        }
+
+        if (toDelete.Count == 0) return [];
+
+        string ids = string.Join(",", toDelete.Select(x => x.id));
+        using var eventsCmd = connection.CreateCommand();
+        eventsCmd.CommandText = $"DELETE FROM ClipboardEvents WHERE ClipboardContentId IN ({ids});";
+        await eventsCmd.ExecuteNonQueryAsync().ConfigureAwait(false);
+
+        using var contentCmd = connection.CreateCommand();
+        contentCmd.CommandText = $"DELETE FROM ClipboardContents WHERE Id IN ({ids});";
+        await contentCmd.ExecuteNonQueryAsync().ConfigureAwait(false);
+
+        return toDelete.Select(x => (x.img, x.thumb)).ToList();
+    }
+
+    public async Task<IReadOnlyList<string>> GetAllKnownImagePathsAsync()
+    {
+        using var connection = _context.CreateConnection();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+            SELECT ImagePath, ThumbnailPath FROM ClipboardContents
+            WHERE ImagePath IS NOT NULL OR ThumbnailPath IS NOT NULL;
+            """;
+
+        var paths = new List<string>();
+        using var reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false);
+        while (await reader.ReadAsync().ConfigureAwait(false))
+        {
+            if (!reader.IsDBNull(0)) paths.Add(reader.GetString(0));
+            if (!reader.IsDBNull(1)) paths.Add(reader.GetString(1));
+        }
+        return paths;
+    }
+
+    public async Task<IReadOnlyList<string>> GetUnpinnedImagePathsAsync()
+    {
+        using var connection = _context.CreateConnection();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+            SELECT ImagePath, ThumbnailPath FROM ClipboardContents
+            WHERE IsPinned = 0 AND (ImagePath IS NOT NULL OR ThumbnailPath IS NOT NULL);
+            """;
+
+        var paths = new List<string>();
+        using var reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false);
+        while (await reader.ReadAsync().ConfigureAwait(false))
+        {
+            if (!reader.IsDBNull(0)) paths.Add(reader.GetString(0));
+            if (!reader.IsDBNull(1)) paths.Add(reader.GetString(1));
+        }
+        return paths;
     }
 
     private static async Task<List<TimelineItemRecord>> ReadTimelineItemsAsync(SqliteCommand cmd)

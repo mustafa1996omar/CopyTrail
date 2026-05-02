@@ -69,7 +69,7 @@ public partial class SettingsWindow
     private void ClearHistoryButton_Click(object sender, RoutedEventArgs e)
     {
         var result = WpfMessageBox.Show(
-            "Clear all clipboard history? This cannot be undone.",
+            "Clear all clipboard history including pinned items? This cannot be undone.",
             "CopyTrail",
             WpfMessageBoxButton.YesNo,
             WpfMessageBoxImage.Warning,
@@ -87,7 +87,55 @@ public partial class SettingsWindow
             return;
         }
 
-        _ = App.Repository.ClearAllAsync();
+        _ = ClearAllHistoryAsync();
+    }
+
+    private async System.Threading.Tasks.Task ClearAllHistoryAsync()
+    {
+        if (App.Repository is null) return;
+        var allPaths = await App.Repository.GetAllKnownImagePathsAsync();
+        await App.Repository.ClearAllAsync(keepPinned: false);
+        if (App.FileStorage is not null)
+        {
+            foreach (var path in allPaths)
+                App.FileStorage.DeleteMediaFileIfExists(path);
+        }
+    }
+
+    private void ClearUnpinnedButton_Click(object sender, RoutedEventArgs e)
+    {
+        var result = WpfMessageBox.Show(
+            "Clear unpinned clipboard history? Pinned items will be kept.",
+            "CopyTrail",
+            WpfMessageBoxButton.YesNo,
+            WpfMessageBoxImage.Warning,
+            WpfMessageBoxResult.No);
+
+        if (result != WpfMessageBoxResult.Yes) return;
+
+        if (App.Repository is null)
+        {
+            WpfMessageBox.Show(
+                "History could not be cleared — the database is not available.",
+                "CopyTrail",
+                WpfMessageBoxButton.OK,
+                WpfMessageBoxImage.Warning);
+            return;
+        }
+
+        _ = ClearUnpinnedHistoryAsync();
+    }
+
+    private async System.Threading.Tasks.Task ClearUnpinnedHistoryAsync()
+    {
+        if (App.Repository is null) return;
+        var unpinnedPaths = await App.Repository.GetUnpinnedImagePathsAsync();
+        await App.Repository.ClearAllAsync(keepPinned: true);
+        if (App.FileStorage is not null)
+        {
+            foreach (var path in unpinnedPaths)
+                App.FileStorage.DeleteMediaFileIfExists(path);
+        }
     }
 
     private void OpenDataFolderButton_Click(object sender, RoutedEventArgs e)

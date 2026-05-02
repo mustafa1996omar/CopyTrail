@@ -17,6 +17,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     private bool _collapseRapidDuplicates;
     private int _rapidDuplicateWindowSeconds;
     private int _maxHistoryCount;
+    private int _maxStorageGb;
 
     public ObservableCollection<string> ExcludedProcessNames { get; } = [];
 
@@ -30,6 +31,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         _collapseRapidDuplicates = settings.CollapseRapidDuplicates;
         _rapidDuplicateWindowSeconds = settings.RapidDuplicateWindowSeconds;
         _maxHistoryCount = settings.MaxHistoryCount;
+        _maxStorageGb = BytesToGb(settings.MaxStorageBytes);
         foreach (var name in settings.ExcludedProcessNames)
             ExcludedProcessNames.Add(name);
     }
@@ -82,6 +84,12 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         set { _maxHistoryCount = value; Notify(); }
     }
 
+    public int MaxStorageGb
+    {
+        get => _maxStorageGb;
+        set { _maxStorageGb = value; Notify(); }
+    }
+
     public void ApplyTo(AppSettings settings)
     {
         settings.OpenPopupShortcut = _openPopupShortcut;
@@ -92,6 +100,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         settings.CollapseRapidDuplicates = _collapseRapidDuplicates;
         settings.RapidDuplicateWindowSeconds = _rapidDuplicateWindowSeconds;
         settings.MaxHistoryCount = _maxHistoryCount;
+        settings.MaxStorageBytes = GbToBytes(_maxStorageGb);
         settings.ExcludedProcessNames.Clear();
         foreach (var name in ExcludedProcessNames)
             settings.ExcludedProcessNames.Add(name);
@@ -107,6 +116,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         CollapseRapidDuplicates = settings.CollapseRapidDuplicates;
         RapidDuplicateWindowSeconds = settings.RapidDuplicateWindowSeconds;
         MaxHistoryCount = settings.MaxHistoryCount;
+        MaxStorageGb = BytesToGb(settings.MaxStorageBytes);
         ExcludedProcessNames.Clear();
         foreach (var name in settings.ExcludedProcessNames)
             ExcludedProcessNames.Add(name);
@@ -114,6 +124,8 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
 
     private static int BytesToMb(long bytes) => (int)Math.Max(1, bytes / (1024 * 1024));
     private static long MbToBytes(int mb) => (long)mb * 1024 * 1024;
+    private static int BytesToGb(long bytes) => (int)Math.Max(1, bytes / (1024L * 1024 * 1024));
+    private static long GbToBytes(int gb) => (long)gb * 1024 * 1024 * 1024;
 
     private void Notify([CallerMemberName] string? name = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));

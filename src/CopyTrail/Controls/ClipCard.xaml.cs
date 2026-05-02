@@ -16,9 +16,6 @@ public partial class ClipCard
     private static readonly SolidColorBrush DefaultBorder =
         new(Color.FromRgb(0xE5, 0xE7, 0xEB));
 
-    private static readonly SolidColorBrush SelectedBorder =
-        new(Color.FromRgb(0x25, 0x63, 0xEB));
-
     public ClipCard()
     {
         InitializeComponent();
@@ -39,13 +36,21 @@ public partial class ClipCard
             ApplySelectionVisual();
     }
 
+    private void PinButton_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        if (DataContext is not ClipCardViewModel vm) return;
+        var popup = Window.GetWindow(this) as PopupWindow;
+        popup?.RequestTogglePin(vm);
+    }
+
     private void ApplySelectionVisual()
     {
         if (DataContext is not ClipCardViewModel vm) return;
 
         if (vm.IsSelected)
         {
-            CardBorder.BorderBrush = SelectedBorder;
+            CardBorder.BorderBrush = vm.AccentBrush;
             CardBorder.BorderThickness = new Thickness(2);
             CardBorder.Effect = new DropShadowEffect
             {
@@ -53,7 +58,7 @@ public partial class ClipCard
                 Direction = 270,
                 ShadowDepth = 6,
                 Opacity = 0.18,
-                Color = Color.FromRgb(0x25, 0x63, 0xEB)
+                Color = vm.AccentBrush.Color,
             };
         }
         else
@@ -74,6 +79,7 @@ public partial class ClipCard
     protected override void OnMouseEnter(WinInput.MouseEventArgs e)
     {
         base.OnMouseEnter(e);
+        HoverOverlay.Visibility = Visibility.Visible;
         if (DataContext is ClipCardViewModel vm && !vm.IsSelected)
         {
             CardBorder.BorderBrush = vm.AccentBrush;
@@ -91,6 +97,7 @@ public partial class ClipCard
     protected override void OnMouseLeave(WinInput.MouseEventArgs e)
     {
         base.OnMouseLeave(e);
+        HoverOverlay.Visibility = Visibility.Collapsed;
         ApplySelectionVisual();
     }
 
@@ -104,12 +111,38 @@ public partial class ClipCard
         popup?.RequestPaste(vm);
     }
 
+    private void PasteActionButton_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        if (DataContext is not ClipCardViewModel vm) return;
+        var popup = Window.GetWindow(this) as PopupWindow;
+        popup?.RequestPaste(vm);
+    }
+
+    private void CopyActionButton_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        if (DataContext is not ClipCardViewModel vm) return;
+        var popup = Window.GetWindow(this) as PopupWindow;
+        popup?.RequestCopy(vm);
+    }
+
     private void MenuButton_Click(object sender, RoutedEventArgs e)
     {
         e.Handled = true;
         if (DataContext is not ClipCardViewModel vm) return;
 
         var menu = new WpfContextMenu();
+
+        var deleteItem = new WpfMenuItem { Header = "Delete" };
+        deleteItem.Click += (_, _) =>
+        {
+            var popup = Window.GetWindow(this) as Views.PopupWindow;
+            popup?.RequestDelete(vm);
+        };
+        menu.Items.Add(deleteItem);
+
+        menu.Items.Add(new System.Windows.Controls.Separator());
 
         var ignoreItem = new WpfMenuItem { Header = "Ignore this app next time" };
         ignoreItem.IsEnabled = !string.IsNullOrWhiteSpace(vm.SourceProcessName);

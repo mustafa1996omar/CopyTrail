@@ -53,3 +53,4 @@ C:\Users\MustafaAlKhalidi\Documents\Projects\CopyTrail\src\CopyTrail\obj\Debug\n
 C:\Users\MustafaAlKhalidi\Documents\Projects\CopyTrail\src\CopyTrail\obj\Debug\net10.0-windows\CopyTrail.pdb
 C:\Users\MustafaAlKhalidi\Documents\Projects\CopyTrail\src\CopyTrail\obj\Debug\net10.0-windows\CopyTrail.genruntimeconfig.cache
 C:\Users\MustafaAlKhalidi\Documents\Projects\CopyTrail\src\CopyTrail\obj\Debug\net10.0-windows\ref\CopyTrail.dll
+C:\Users\MustafaAlKhalidi\Documents\Projects\CopyTrail\src\CopyTrail\obj\Debug\net10.0-windows\CopyTrail.sourcelink.json

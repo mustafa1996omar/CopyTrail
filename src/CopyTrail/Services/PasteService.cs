@@ -84,6 +84,7 @@ public sealed class PasteService
         }
         catch
         {
+            LoggingService.LogError("PasteService", "Failed to write content to clipboard");
             return false;
         }
     }

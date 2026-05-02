@@ -13,12 +13,13 @@ public partial class PopupWindow
 {
     private readonly IntPtr _previousWindow;
     private bool _isPasting;
+    private bool _isClosing;
 
     public PopupWindow(IntPtr previousWindow = default)
     {
         _previousWindow = previousWindow;
         InitializeComponent();
-        DataContext = new PopupViewModel(App.Repository, App.Settings);
+        DataContext = new PopupViewModel(App.Repository, App.Settings, App.CleanupService);
     }
 
     private PopupViewModel ViewModel => (PopupViewModel)DataContext;
@@ -44,6 +45,7 @@ public partial class PopupWindow
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
         };
         BeginAnimation(OpacityProperty, fadeIn);
+        SearchBox.Focus();
     }
 
     protected override void OnKeyDown(WinInput.KeyEventArgs e)
@@ -59,7 +61,7 @@ public partial class PopupWindow
             }
             else
             {
-                Close();
+                AnimatedClose();
             }
             e.Handled = true;
             return;
@@ -72,16 +74,18 @@ public partial class PopupWindow
             return;
         }
 
-        if (e.Key == WinInput.Key.Left || e.Key == WinInput.Key.Up)
+        if (e.Key == WinInput.Key.Up)
         {
             ViewModel.SelectPrevious();
+            ScrollSelectedIntoView();
             e.Handled = true;
             return;
         }
 
-        if (e.Key == WinInput.Key.Right || e.Key == WinInput.Key.Down)
+        if (e.Key == WinInput.Key.Down)
         {
             ViewModel.SelectNext();
+            ScrollSelectedIntoView();
             e.Handled = true;
             return;
         }
@@ -97,6 +101,28 @@ public partial class PopupWindow
                 _ = ExecutePasteAsync(ViewModel.SelectedCard);
             }
             e.Handled = true;
+            return;
+        }
+
+        if (e.Key == WinInput.Key.Delete && !SearchBox.IsFocused)
+        {
+            var selected = ViewModel.SelectedCard;
+            if (selected is not null)
+            {
+                _ = ViewModel.DeleteCardAsync(selected);
+                e.Handled = true;
+            }
+            return;
+        }
+
+        if (e.Key == WinInput.Key.P && !SearchBox.IsFocused)
+        {
+            var selected = ViewModel.SelectedCard;
+            if (selected is not null)
+            {
+                _ = ViewModel.TogglePinAsync(selected);
+                e.Handled = true;
+            }
             return;
         }
     }
@@ -119,6 +145,26 @@ public partial class PopupWindow
     {
         ViewModel.SetSelectedCard(vm);
         _ = ExecutePasteAsync(vm);
+    }
+
+    /// <summary>
+    /// Called by ClipCard when the user clicks the Copy action button.
+    /// Copies item to clipboard without pasting and closes the popup.
+    /// </summary>
+    internal void RequestCopy(ClipCardViewModel vm)
+    {
+        ViewModel.SetSelectedCard(vm);
+        ExecuteCopyOnly(vm);
+    }
+
+    internal void RequestTogglePin(ClipCardViewModel vm)
+    {
+        _ = ViewModel.TogglePinAsync(vm);
+    }
+
+    internal void RequestDelete(ClipCardViewModel vm)
+    {
+        _ = ViewModel.DeleteCardAsync(vm);
     }
 
     private async Task ExecutePasteAsync(ClipCardViewModel? vm)
@@ -150,7 +196,7 @@ public partial class PopupWindow
         bool success = pasteService.CopyOnly(vm.Content);
 
         if (success)
-            Close();
+            AnimatedClose();
         else
             ShowError("Could not copy this item. The content may be unavailable.");
     }
@@ -167,11 +213,41 @@ public partial class PopupWindow
         ErrorText.Text = "";
     }
 
+    private void AnimatedClose()
+    {
+        if (_isClosing) return;
+        _isClosing = true;
+        var fadeOut = new DoubleAnimation(1, 0, new Duration(TimeSpan.FromMilliseconds(150)))
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
+        };
+        fadeOut.Completed += (_, _) => Close();
+        BeginAnimation(OpacityProperty, fadeOut);
+    }
+
+    private void ScrollSelectedIntoView()
+    {
+        var vm = ViewModel.SelectedCard;
+        if (vm is null) return;
+        var container = TryGetContainer(PinnedItemsControl, vm)
+                     ?? TryGetContainer(RegularItemsControl, vm);
+        container?.BringIntoView();
+    }
+
+    private static FrameworkElement? TryGetContainer(System.Windows.Controls.ItemsControl ic, object item)
+        => ic.ItemContainerGenerator.ContainerFromItem(item) as FrameworkElement;
+
     private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         SearchPlaceholder.Visibility = string.IsNullOrEmpty(SearchBox.Text)
             ? Visibility.Visible
             : Visibility.Collapsed;
+    }
+
+    private void SearchClearButton_Click(object sender, RoutedEventArgs e)
+    {
+        SearchBox.Clear();
+        SearchBox.Focus();
     }
 
     private void SelectChip(FilterKind kind)
@@ -184,6 +260,7 @@ public partial class PopupWindow
         SetChipSelected(ChipBorderImages, ChipTextImages, kind == FilterKind.Images);
         SetChipSelected(ChipBorderFiles, ChipTextFiles, kind == FilterKind.Files);
         SetChipSelected(ChipBorderColors, ChipTextColors, kind == FilterKind.Colors);
+        SetChipSelected(ChipBorderPinned, ChipTextPinned, kind == FilterKind.Pinned);
     }
 
     private void SetChipSelected(Border border, TextBlock text, bool selected)
@@ -194,7 +271,7 @@ public partial class PopupWindow
 
     private void SettingsButton_Click(object sender, System.Windows.RoutedEventArgs e)
     {
-        Close();
+        AnimatedClose();
         App.OpenSettings();
     }
 
@@ -205,6 +282,7 @@ public partial class PopupWindow
     private void ChipImages_MouseUp(object sender, WinInput.MouseButtonEventArgs e) => SelectChip(FilterKind.Images);
     private void ChipFiles_MouseUp(object sender, WinInput.MouseButtonEventArgs e) => SelectChip(FilterKind.Files);
     private void ChipColors_MouseUp(object sender, WinInput.MouseButtonEventArgs e) => SelectChip(FilterKind.Colors);
+    private void ChipPinned_MouseUp(object sender, WinInput.MouseButtonEventArgs e) => SelectChip(FilterKind.Pinned);
 
     private void PositionNearCursor()
     {

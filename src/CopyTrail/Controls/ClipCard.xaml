@@ -3,10 +3,38 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:CopyTrail.Controls"
              xmlns:converters="clr-namespace:CopyTrail.Converters"
-             Width="210" Cursor="Hand">
+             HorizontalAlignment="Stretch" Cursor="Hand">
 
     <UserControl.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVis" />
+        <!-- Hover action button style -->
+        <Style x:Key="HoverActionButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Padding" Value="6,3" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="#374151" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="5"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#DDE3F0" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <!-- Outer border: shadow + rounded card -->
@@ -48,16 +76,36 @@
                                           Source="{Binding Source}"
                                           VerticalAlignment="Center" />
 
-                    <!-- Content kind badge (pill) -->
-                    <Border Grid.Column="1"
-                            Background="{Binding BadgeBackgroundBrush}"
-                            CornerRadius="10"
-                            Padding="7,3,7,3"
-                            VerticalAlignment="Center">
-                        <TextBlock Text="{Binding ContentKind}"
-                                   FontSize="10" FontWeight="SemiBold"
-                                   Foreground="{Binding BadgeForegroundBrush}" />
-                    </Border>
+                    <!-- Badges row (large + content kind) -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- Large content indicator — shown only when IsLargeContent -->
+                        <Border CornerRadius="10"
+                                Padding="6,2,6,2"
+                                Margin="0,0,4,0"
+                                Background="#FEF3C7">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsLargeContent}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock Text="Large"
+                                       FontSize="9" FontWeight="SemiBold"
+                                       Foreground="#92400E" />
+                        </Border>
+                        <!-- Content kind badge (pill) -->
+                        <Border Background="{Binding BadgeBackgroundBrush}"
+                                CornerRadius="10"
+                                Padding="7,3,7,3">
+                            <TextBlock Text="{Binding ContentKind}"
+                                       FontSize="10" FontWeight="SemiBold"
+                                       Foreground="{Binding BadgeForegroundBrush}" />
+                        </Border>
+                    </StackPanel>
                 </Grid>
             </Border>
 
@@ -67,10 +115,10 @@
                        Fill="{Binding AccentBrush}"
                        Opacity="0.7" />
 
-            <!-- Row 1: Content preview — image or text depending on kind -->
+            <!-- Row 1: Per-type content preview -->
             <Grid Grid.Row="1">
 
-                <!-- Image thumbnail (Image / Screenshot kinds) -->
+                <!-- Image thumbnail (Image / Screenshot) -->
                 <Border Padding="12,10,12,6"
                         Visibility="{Binding IsImageCard, Converter={StaticResource BoolToVis}}">
                     <Image Source="{Binding ThumbnailPath}"
@@ -80,7 +128,61 @@
                            VerticalAlignment="Center" />
                 </Border>
 
-                <!-- Text preview (all other kinds) -->
+                <!-- Code / JSON / Terminal — dark monospace block -->
+                <Border Padding="12,10,12,8"
+                        Visibility="{Binding IsCodeCard, Converter={StaticResource BoolToVis}}">
+                    <Border Background="#1E1E2E"
+                            CornerRadius="6"
+                            Padding="10,8,10,8">
+                        <TextBlock Text="{Binding Preview}"
+                                   FontFamily="Consolas, Courier New, monospace"
+                                   FontSize="11"
+                                   Foreground="#E2E8F0"
+                                   TextWrapping="Wrap"
+                                   TextTrimming="CharacterEllipsis"
+                                   LineHeight="16"
+                                   MaxHeight="110" />
+                    </Border>
+                </Border>
+
+                <!-- Color swatch (ColorValue) -->
+                <Border Padding="14,12,12,8"
+                        Visibility="{Binding IsColorCard, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <Border Width="110" Height="44"
+                                CornerRadius="8"
+                                Background="{Binding ColorSwatchBrush}"
+                                HorizontalAlignment="Left"
+                                Margin="0,0,0,8"
+                                BorderThickness="1"
+                                BorderBrush="#E5E7EB" />
+                        <TextBlock Text="{Binding Preview}"
+                                   FontSize="12"
+                                   FontFamily="Consolas, Courier New, monospace"
+                                   Foreground="#1F2937" />
+                    </StackPanel>
+                </Border>
+
+                <!-- URL panel (show domain + full url) -->
+                <Border Padding="14,12,12,8"
+                        Visibility="{Binding IsUrlCard, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding UrlDomain}"
+                                   FontSize="12" FontWeight="SemiBold"
+                                   Foreground="#1D4ED8"
+                                   TextTrimming="CharacterEllipsis"
+                                   Margin="0,0,0,4" />
+                        <TextBlock Text="{Binding Preview}"
+                                   FontSize="10.5"
+                                   FontFamily="Consolas, Courier New, monospace"
+                                   Foreground="#6B7280"
+                                   TextWrapping="Wrap"
+                                   TextTrimming="CharacterEllipsis"
+                                   MaxHeight="80" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Default text (Text, RichText, Html, Markdown, Svg, File, Word, PDF, etc.) -->
                 <Border Padding="14,12,12,8">
                     <Border.Style>
                         <Style TargetType="Border">
@@ -88,23 +190,32 @@
                                 <DataTrigger Binding="{Binding IsImageCard}" Value="True">
                                     <Setter Property="Visibility" Value="Collapsed" />
                                 </DataTrigger>
+                                <DataTrigger Binding="{Binding IsCodeCard}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsColorCard}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsUrlCard}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </Border.Style>
                     <TextBlock Text="{Binding Preview}"
-                               FontSize="12.5"
+                               FontSize="13"
                                Foreground="#1F2937"
                                TextWrapping="Wrap"
                                TextTrimming="CharacterEllipsis"
                                LineHeight="18"
-                               MaxHeight="155"
-                               FontFamily="Consolas, Segoe UI, sans-serif" />
+                               MaxHeight="155" />
                 </Border>
 
             </Grid>
 
-            <!-- Row 2: Footer (timestamp, copy count, pin) -->
+            <!-- Row 2: Footer (timestamp, copy count, pin, menu) -->
             <Border Grid.Row="2"
+                    x:Name="FooterBorder"
                     Background="#F8FAFC"
                     CornerRadius="0,0,12,12"
                     BorderThickness="0,1,0,0"
@@ -139,10 +250,22 @@
                                 FontSize="13"
                                 Background="Transparent"
                                 BorderThickness="0"
-                                Foreground="#CBD5E1"
                                 Padding="4,0"
                                 Cursor="Hand"
-                                ToolTip="Pin item" />
+                                Click="PinButton_Click">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Foreground" Value="#CBD5E1" />
+                                    <Setter Property="ToolTip" Value="Pin item" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsPinned}" Value="True">
+                                            <Setter Property="Foreground" Value="#2563EB" />
+                                            <Setter Property="ToolTip" Value="Unpin item" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
                         <Button x:Name="MenuButton"
                                 Content="⋯"
                                 FontSize="14"
@@ -154,6 +277,50 @@
                                 ToolTip="More options"
                                 Click="MenuButton_Click" />
                     </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Hover action overlay: replaces footer on mouse enter -->
+            <Border Grid.Row="2"
+                    x:Name="HoverOverlay"
+                    Visibility="Collapsed"
+                    Background="#EEF4FF"
+                    BorderBrush="{Binding AccentBrush}"
+                    BorderThickness="0,1,0,0"
+                    CornerRadius="0,0,12,12"
+                    Padding="10,0,10,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Paste + Copy action buttons -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal"
+                                VerticalAlignment="Center">
+                        <Button x:Name="PasteActionButton"
+                                Content="↵ Paste"
+                                Style="{StaticResource HoverActionButton}"
+                                FontWeight="SemiBold"
+                                Foreground="#1D4ED8"
+                                Margin="0,0,4,0"
+                                ToolTip="Paste this item"
+                                Click="PasteActionButton_Click" />
+                        <Button x:Name="CopyActionButton"
+                                Content="⎘ Copy"
+                                Style="{StaticResource HoverActionButton}"
+                                ToolTip="Copy to clipboard without pasting"
+                                Click="CopyActionButton_Click" />
+                    </StackPanel>
+
+                    <!-- Pin indicator when item is pinned -->
+                    <TextBlock Grid.Column="1"
+                               Text="⚑"
+                               FontSize="13"
+                               Foreground="{Binding AccentBrush}"
+                               VerticalAlignment="Center"
+                               Margin="4,0,2,0"
+                               Visibility="{Binding IsPinned, Converter={StaticResource BoolToVis}}" />
                 </Grid>
             </Border>
 

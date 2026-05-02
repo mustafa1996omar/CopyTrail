@@ -2,6 +2,7 @@
 
 namespace CopyTrail.Utilities;
 
+
 public static class AppNameMapper
 {
     private static readonly Dictionary<string, SourceVisualIdentity> KnownApps =
@@ -61,14 +62,18 @@ public static class AppNameMapper
         if (KnownApps.TryGetValue(processName, out var known))
             return known;
 
-        // Fallback: use process name without extension as display name
+        // Fallback: derive consistent accent color from process name hash.
+        string accent = ColorUtilities.GenerateAccentHex(processName);
+        string soft = ColorUtilities.GenerateSoftHex(accent);
+        string fg = ColorUtilities.GetReadableForegroundHex(accent);
+
         return new SourceVisualIdentity
         {
             AppName = processName,
             ProcessName = processName,
-            AccentColorHex = SourceVisualIdentity.Unknown.AccentColorHex,
-            SoftAccentColorHex = SourceVisualIdentity.Unknown.SoftAccentColorHex,
-            ForegroundColorHex = SourceVisualIdentity.Unknown.ForegroundColorHex,
+            AccentColorHex = accent,
+            SoftAccentColorHex = soft,
+            ForegroundColorHex = fg,
             Initial = processName.Length > 0 ? char.ToUpperInvariant(processName[0]).ToString() : "?"
         };
     }
