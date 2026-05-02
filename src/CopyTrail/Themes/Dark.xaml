@@ -1,0 +1,84 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Panel -->
+    <Color x:Key="PanelBackgroundColor">#E80A0A0E</Color>
+    <SolidColorBrush x:Key="PanelBackground" Color="{StaticResource PanelBackgroundColor}" />
+    <SolidColorBrush x:Key="PanelBorderBrush" Color="#14FFFFFF" />
+    <SolidColorBrush x:Key="HandleBrush" Color="#1AFFFFFF" />
+    <SolidColorBrush x:Key="SeparatorBrush" Color="#0DFFFFFF" />
+
+    <!-- Cards -->
+    <Color x:Key="CardBackgroundColor">#0AFFFFFF</Color>
+    <SolidColorBrush x:Key="CardBackground" Color="{StaticResource CardBackgroundColor}" />
+    <SolidColorBrush x:Key="CardBorder" Color="#0FFFFFFF" />
+    <SolidColorBrush x:Key="CardHoverBorder" Color="#26FFFFFF" />
+    <SolidColorBrush x:Key="CardSelectedBorder" Color="#40FFFFFF" />
+    <SolidColorBrush x:Key="CardSelectedFooterBackground" Color="#1A6366F1" />
+
+    <!-- Search -->
+    <SolidColorBrush x:Key="SearchBackground" Color="#0FFFFFFF" />
+    <SolidColorBrush x:Key="SearchBorder" Color="#14FFFFFF" />
+    <SolidColorBrush x:Key="SearchPlaceholder" Color="#3F3F46" />
+
+    <!-- Chips -->
+    <SolidColorBrush x:Key="ChipIdleBackground" Color="#0FFFFFFF" />
+    <SolidColorBrush x:Key="ChipIdleForeground" Color="#71717A" />
+    <SolidColorBrush x:Key="ChipActiveBackground" Color="#6366F1" />
+    <SolidColorBrush x:Key="ChipActiveForeground" Color="#FFFFFF" />
+
+    <!-- Typography -->
+    <SolidColorBrush x:Key="AppNameForeground" Color="#A1A1AA" />
+    <SolidColorBrush x:Key="BodyText" Color="#A1A1AA" />
+    <SolidColorBrush x:Key="MetaText" Color="#3F3F46" />
+    <SolidColorBrush x:Key="HeaderText" Color="#FAFAFA" />
+    <SolidColorBrush x:Key="SearchIcon" Color="#52525B" />
+
+    <!-- Code block -->
+    <SolidColorBrush x:Key="CodeBackground" Color="#0C0A20" />
+    <SolidColorBrush x:Key="CodeForeground" Color="#A5F3FC" />
+
+    <!-- Footer -->
+    <SolidColorBrush x:Key="FooterBackground" Color="#1A000000" />
+    <SolidColorBrush x:Key="FooterBorder" Color="#0DFFFFFF" />
+    <SolidColorBrush x:Key="FooterHoverBackground" Color="#0D6366F1" />
+    <SolidColorBrush x:Key="FooterHoverBorder" Color="#1A6366F1" />
+
+    <!-- Keyboard hints -->
+    <SolidColorBrush x:Key="KbdBackground" Color="#0FFFFFFF" />
+    <SolidColorBrush x:Key="KbdBorder" Color="#14FFFFFF" />
+    <SolidColorBrush x:Key="KbdForeground" Color="#71717A" />
+    <SolidColorBrush x:Key="KbdHintForeground" Color="#3F3F46" />
+
+    <!-- Accent -->
+    <SolidColorBrush x:Key="AccentPrimary" Color="#6366F1" />
+    <SolidColorBrush x:Key="AccentSecondary" Color="#818CF8" />
+    <SolidColorBrush x:Key="PasteActionForeground" Color="#818CF8" />
+    <SolidColorBrush x:Key="CopyActionForeground" Color="#71717A" />
+    <SolidColorBrush x:Key="DeleteActionForeground" Color="#EF4444" />
+    <SolidColorBrush x:Key="PinActiveForeground" Color="#6366F1" />
+    <SolidColorBrush x:Key="PinInactiveForeground" Color="#3F3F46" />
+
+    <!-- Scroll arrows -->
+    <SolidColorBrush x:Key="ScrollArrowBackground" Color="#1AFFFFFF" />
+    <SolidColorBrush x:Key="ScrollArrowForeground" Color="#71717A" />
+
+    <!-- Settings window -->
+    <SolidColorBrush x:Key="WindowBackground" Color="#0C0C10" />
+    <SolidColorBrush x:Key="SectionHeaderForeground" Color="#52525B" />
+    <SolidColorBrush x:Key="SettingRowBackground" Color="#111114" />
+    <SolidColorBrush x:Key="SettingLabelForeground" Color="#F4F4F5" />
+    <SolidColorBrush x:Key="SettingSubLabelForeground" Color="#71717A" />
+    <SolidColorBrush x:Key="InputBackground" Color="#18181B" />
+    <SolidColorBrush x:Key="InputBorder" Color="#3F3F46" />
+    <SolidColorBrush x:Key="InputForeground" Color="#F4F4F5" />
+    <SolidColorBrush x:Key="ButtonBackground" Color="#18181B" />
+    <SolidColorBrush x:Key="ButtonBorder" Color="#3F3F46" />
+    <SolidColorBrush x:Key="ButtonForeground" Color="#D4D4D8" />
+    <SolidColorBrush x:Key="DestructiveBackground" Color="#2D0D0D" />
+    <SolidColorBrush x:Key="DestructiveBorder" Color="#7F1D1D" />
+    <SolidColorBrush x:Key="DestructiveForeground" Color="#EF4444" />
+    <SolidColorBrush x:Key="PrivacyNoteBackground" Color="#0F2318" />
+    <SolidColorBrush x:Key="PrivacyNoteBorder" Color="#166534" />
+    <SolidColorBrush x:Key="PrivacyNoteForeground" Color="#4ADE80" />
+</ResourceDictionary>
