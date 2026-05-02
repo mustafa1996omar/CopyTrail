@@ -1,7 +1,11 @@
 ﻿namespace CopyTrail.Models;
 
+public enum AppTheme { System, Dark, Light }
+
 public sealed class AppSettings
 {
+    public AppTheme Theme { get; set; } = AppTheme.System;
+
     public string OpenPopupShortcut { get; set; } = "Alt+V";
     public bool StartWithWindows { get; set; } = false;
     public bool StoreImages { get; set; } = true;
