@@ -125,7 +125,7 @@ public partial class App
         if (_popupWindow is { IsVisible: true })
         {
             if (_popupWindow.IsActive)
-                _popupWindow.Close();
+                _popupWindow.AnimatedHide();
             else
                 _popupWindow.Activate();
             return;
@@ -145,17 +145,18 @@ public partial class App
 
     private void OpenPopup()
     {
-        _popupWindow ??= CreatePopupWindow();
-        _popupWindow.Show();
-        _popupWindow.Activate();
-    }
-
-    private PopupWindow CreatePopupWindow()
-    {
-        var previousWindow = _hotkeyService?.LastForegroundWindow ?? IntPtr.Zero;
-        var w = new PopupWindow(previousWindow);
-        w.Closed += (_, _) => _popupWindow = null;
-        return w;
+        if (_popupWindow is null)
+        {
+            var previousWindow = _hotkeyService?.LastForegroundWindow ?? IntPtr.Zero;
+            _popupWindow = new PopupWindow(previousWindow);
+            _popupWindow.Initialize();
+        }
+        else
+        {
+            _popupWindow.UpdatePreviousWindow(
+                _hotkeyService?.LastForegroundWindow ?? IntPtr.Zero);
+        }
+        _popupWindow.AnimatedShow();
     }
 
     public static void OpenSettings()
@@ -244,7 +245,7 @@ public partial class App
     {
         SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
         _pauseTimer?.Dispose();
-        _popupWindow?.Close();
+        _popupWindow?.ForceClose();
         _clipboardMonitor?.Dispose();
         _hotkeyService?.Dispose();
         _trayService?.Dispose();

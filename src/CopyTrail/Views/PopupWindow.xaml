@@ -1,500 +1,111 @@
-﻿<Window x:Class="CopyTrail.Views.PopupWindow"
+<Window x:Class="CopyTrail.Views.PopupWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:CopyTrail.Controls"
         xmlns:converters="clr-namespace:CopyTrail.Converters"
         xmlns:vm="clr-namespace:CopyTrail.ViewModels"
         Title="CopyTrail"
-        Width="472" Height="652"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
         ShowInTaskbar="False"
         Topmost="True"
+        ResizeMode="NoResize"
         WindowStartupLocation="Manual"
-        Opacity="0">
+        Width="800" Height="240"
+        Opacity="0"
+        SizeToContent="Manual">
 
     <Window.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVis" />
-
-        <!-- Clean TextBox (no default chrome) -->
-        <Style x:Key="SearchBoxStyle" TargetType="TextBox">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Foreground" Value="#111827" />
-            <Setter Property="FontSize" Value="13.5" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="CaretBrush" Value="#2563EB" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TextBox">
-                        <ScrollViewer x:Name="PART_ContentHost"
-                                      Margin="0" Padding="0" />
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Filter chip (unselected) -->
-        <Style x:Key="ChipStyle" TargetType="Border">
-            <Setter Property="CornerRadius" Value="16" />
-            <Setter Property="Padding" Value="14,5,14,5" />
-            <Setter Property="Margin" Value="0,0,8,0" />
-            <Setter Property="Background" Value="#F3F4F6" />
-            <Setter Property="Cursor" Value="Hand" />
-        </Style>
-
-        <!-- Filter chip (selected) -->
-        <Style x:Key="ChipSelectedStyle" TargetType="Border">
-            <Setter Property="CornerRadius" Value="16" />
-            <Setter Property="Padding" Value="14,5,14,5" />
-            <Setter Property="Margin" Value="0,0,8,0" />
-            <Setter Property="Background" Value="#2563EB" />
-            <Setter Property="Cursor" Value="Hand" />
-        </Style>
-
-        <!-- Chip text (unselected) -->
-        <Style x:Key="ChipTextStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="12.5" />
-            <Setter Property="FontWeight" Value="Medium" />
-            <Setter Property="Foreground" Value="#6B7280" />
-        </Style>
-
-        <!-- Chip text (selected) -->
-        <Style x:Key="ChipTextSelectedStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="12.5" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="White" />
-        </Style>
-
-        <!-- Icon button -->
-        <Style x:Key="IconButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Padding" Value="6" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                CornerRadius="6"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center" />
-                            <Border.Style>
-                                <Style TargetType="Border">
-                                    <Style.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="#F3F4F6" />
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
     </Window.Resources>
 
-    <!-- Root: transparent with margin for shadow bleed -->
-    <Grid Margin="26">
+    <Window.RenderTransform>
+        <TranslateTransform x:Name="SlideTransform" Y="0" />
+    </Window.RenderTransform>
 
-        <!-- Main container: rounded white card with shadow -->
-        <Border CornerRadius="16"
-                Background="#FFFFFF"
-                BorderBrush="#E5E7EB"
-                BorderThickness="1">
-            <Border.Effect>
-                <DropShadowEffect BlurRadius="48"
-                                  Direction="270"
-                                  ShadowDepth="12"
-                                  Opacity="0.18"
-                                  Color="#0F172A" />
-            </Border.Effect>
+    <Border Background="{DynamicResource PanelBackground}"
+            BorderBrush="{DynamicResource PanelBorderBrush}"
+            BorderThickness="0,1,0,0">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="40" Direction="90"
+                              ShadowDepth="8" Opacity="0.5"
+                              Color="#000000" />
+        </Border.Effect>
 
-            <Grid>
-                <Grid.RowDefinitions>
-                    <!-- Header -->
-                    <RowDefinition Height="62" />
-                    <!-- Separator -->
-                    <RowDefinition Height="1" />
-                    <!-- Filter chips -->
-                    <RowDefinition Height="50" />
-                    <!-- Capture paused banner -->
-                    <RowDefinition Height="Auto" />
-                    <!-- Error banner (collapsed when no error) -->
-                    <RowDefinition Height="Auto" />
-                    <!-- Cards area -->
-                    <RowDefinition Height="*" />
-                    <!-- Separator -->
-                    <RowDefinition Height="1" />
-                    <!-- Footer keyboard hints -->
-                    <RowDefinition Height="34" />
-                </Grid.RowDefinitions>
+        <Grid x:Name="RootGrid">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="14" />
+                <RowDefinition Height="48" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="1" />
+                <RowDefinition Height="30" />
+            </Grid.RowDefinitions>
 
-                <!-- ── Header ── -->
-                <Grid Grid.Row="0" Margin="20,0,20,0">
-                    <Grid.ColumnDefinitions>
-                        <!-- Logo -->
-                        <ColumnDefinition Width="Auto" />
-                        <!-- Search (fills remaining) -->
-                        <ColumnDefinition Width="*" />
-                        <!-- Settings button -->
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+            <!-- Drag handle -->
+            <Border Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Width="32" Height="3" CornerRadius="1.5"
+                    Background="{DynamicResource HandleBrush}" />
 
-                    <!-- Logo mark + wordmark -->
-                    <StackPanel Grid.Column="0" Orientation="Horizontal"
-                                VerticalAlignment="Center" Margin="0,0,20,0">
-                        <Border Width="32" Height="32" CornerRadius="8"
-                                Background="#2563EB" VerticalAlignment="Center">
-                            <TextBlock Text="CT"
-                                       FontSize="11" FontWeight="Bold"
-                                       Foreground="White"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center" />
-                        </Border>
-                        <TextBlock Text="CopyTrail"
-                                   FontSize="15" FontWeight="SemiBold"
-                                   Foreground="#111827"
-                                   Margin="10,0,0,0"
-                                   VerticalAlignment="Center" />
-                    </StackPanel>
+            <!-- Header placeholder (replaced in Task 6) -->
+            <ContentPresenter Grid.Row="1" x:Name="HeaderArea" />
 
-                    <!-- Search box -->
-                    <Border Grid.Column="1"
-                            CornerRadius="10"
-                            Background="#F9FAFB"
-                            BorderBrush="#E5E7EB"
-                            BorderThickness="1"
-                            Padding="12,0,8,0"
-                            VerticalAlignment="Center">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0"
-                                       Text="⌕"
-                                       FontSize="15"
-                                       Foreground="#9CA3AF"
-                                       VerticalAlignment="Center"
-                                       Margin="0,0,8,0" />
-                            <Grid Grid.Column="1">
-                                <!-- Placeholder -->
-                                <TextBlock x:Name="SearchPlaceholder"
-                                           Text="Search clipboard history…"
-                                           FontSize="13.5"
-                                           Foreground="#9CA3AF"
-                                           VerticalAlignment="Center"
-                                           IsHitTestVisible="False" />
-                                <TextBox x:Name="SearchBox"
-                                         Style="{StaticResource SearchBoxStyle}"
-                                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                                         Height="38"
-                                         TextChanged="SearchBox_TextChanged" />
-                            </Grid>
-                            <!-- Clear search (×) button — visible only when search has text -->
-                            <Button Grid.Column="2"
-                                    x:Name="SearchClearButton"
-                                    Content="×"
-                                    FontSize="16"
-                                    Background="Transparent"
-                                    BorderThickness="0"
-                                    Foreground="#9CA3AF"
-                                    Padding="4,0,4,0"
-                                    Cursor="Hand"
-                                    ToolTip="Clear search"
-                                    Visibility="{Binding HasSearchText, Converter={StaticResource BoolToVis}}"
-                                    Click="SearchClearButton_Click" />
-                        </Grid>
-                    </Border>
-
-                    <!-- Settings button -->
-                    <Button Grid.Column="2"
-                            Style="{StaticResource IconButtonStyle}"
-                            Margin="12,0,0,0"
-                            VerticalAlignment="Center"
-                            ToolTip="Settings"
-                            Click="SettingsButton_Click">
-                        <TextBlock Text="⚙"
-                                   FontSize="16"
-                                   Foreground="#6B7280" />
-                    </Button>
-                </Grid>
-
-                <!-- Header separator -->
-                <Rectangle Grid.Row="1" Fill="#F1F5F9" />
-
-                <!-- ── Filter chips + result count ── -->
-                <Grid Grid.Row="2" Margin="20,0,20,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <ScrollViewer Grid.Column="0"
-                                  HorizontalScrollBarVisibility="Hidden"
-                                  VerticalScrollBarVisibility="Disabled">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Border x:Name="ChipBorderAll" Style="{StaticResource ChipSelectedStyle}"
-                                    MouseLeftButtonUp="ChipAll_MouseUp">
-                                <TextBlock x:Name="ChipTextAll" Text="All"
-                                           Style="{StaticResource ChipTextSelectedStyle}" />
-                            </Border>
-                            <Border x:Name="ChipBorderText" Style="{StaticResource ChipStyle}"
-                                    MouseLeftButtonUp="ChipText_MouseUp">
-                                <TextBlock x:Name="ChipTextText" Text="Text"
-                                           Style="{StaticResource ChipTextStyle}" />
-                            </Border>
-                            <Border x:Name="ChipBorderLinks" Style="{StaticResource ChipStyle}"
-                                    MouseLeftButtonUp="ChipLinks_MouseUp">
-                                <TextBlock x:Name="ChipTextLinks" Text="Links"
-                                           Style="{StaticResource ChipTextStyle}" />
-                            </Border>
-                            <Border x:Name="ChipBorderCode" Style="{StaticResource ChipStyle}"
-                                    MouseLeftButtonUp="ChipCode_MouseUp">
-                                <TextBlock x:Name="ChipTextCode" Text="Code"
-                                           Style="{StaticResource ChipTextStyle}" />
-                            </Border>
-                            <Border x:Name="ChipBorderImages" Style="{StaticResource ChipStyle}"
-                                    MouseLeftButtonUp="ChipImages_MouseUp">
-                                <TextBlock x:Name="ChipTextImages" Text="Images"
-                                           Style="{StaticResource ChipTextStyle}" />
-                            </Border>
-                            <Border x:Name="ChipBorderFiles" Style="{StaticResource ChipStyle}"
-                                    MouseLeftButtonUp="ChipFiles_MouseUp">
-                                <TextBlock x:Name="ChipTextFiles" Text="Files"
-                                           Style="{StaticResource ChipTextStyle}" />
-                            </Border>
-                            <Border x:Name="ChipBorderColors" Style="{StaticResource ChipStyle}"
-                                    MouseLeftButtonUp="ChipColors_MouseUp">
-                                <TextBlock x:Name="ChipTextColors" Text="Colors"
-                                           Style="{StaticResource ChipTextStyle}" />
-                            </Border>
-                            <Border x:Name="ChipBorderPinned" Style="{StaticResource ChipStyle}"
-                                    MouseLeftButtonUp="ChipPinned_MouseUp">
-                                <TextBlock x:Name="ChipTextPinned" Text="📌 Pinned"
-                                           Style="{StaticResource ChipTextStyle}" />
-                            </Border>
-                        </StackPanel>
-                    </ScrollViewer>
-                    <!-- Result count — visible only when search or filter is active -->
-                    <TextBlock Grid.Column="1"
-                               Text="{Binding ResultCount, StringFormat='{}{0} result(s)'}"
-                               FontSize="11"
-                               Foreground="#9CA3AF"
-                               VerticalAlignment="Center"
-                               Margin="8,0,0,0"
-                               Visibility="{Binding IsSearchActive, Converter={StaticResource BoolToVis}}" />
-                </Grid>
-
-                <!-- ── Capture paused indicator ── -->
-                <Border x:Name="PausedBanner"
-                        Grid.Row="3"
-                        Background="#FFFBEB"
-                        BorderBrush="#FDE68A"
-                        BorderThickness="0,1,0,1"
-                        Padding="20,8,20,8"
-                        Visibility="Collapsed">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="⏸"
-                                   FontSize="13"
-                                   Foreground="#92400E"
-                                   VerticalAlignment="Center"
-                                   Margin="0,0,8,0" />
-                        <TextBlock Text="Capture paused — new copies will not be saved"
-                                   FontSize="12.5"
-                                   Foreground="#92400E"
-                                   VerticalAlignment="Center" />
-                    </StackPanel>
-                </Border>
-
-                <!-- ── Error banner (shown when paste/copy fails) ── -->
-                <Border x:Name="ErrorBanner"
-                        Grid.Row="4"
-                        Background="#FEF2F2"
-                        BorderBrush="#FECACA"
-                        BorderThickness="0,1,0,1"
-                        Padding="20,8,20,8"
-                        Visibility="Collapsed">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="⚠"
-                                   FontSize="13"
-                                   Foreground="#DC2626"
-                                   VerticalAlignment="Center"
-                                   Margin="0,0,8,0" />
-                        <TextBlock x:Name="ErrorText"
-                                   FontSize="12.5"
-                                   Foreground="#DC2626"
-                                   VerticalAlignment="Center" />
-                    </StackPanel>
-                </Border>
-
-                <!-- ── Card area ── -->
-                <Grid Grid.Row="5">
-
-                    <!-- Real cards — pinned section then regular section (vertical scroll) -->
-                    <ScrollViewer x:Name="CardsScrollViewer"
-                                  VerticalScrollBarVisibility="Auto"
-                                  HorizontalScrollBarVisibility="Disabled"
-                                  Padding="16,12,16,12">
-                        <ScrollViewer.Style>
-                            <Style TargetType="ScrollViewer">
-                                <Setter Property="Visibility" Value="Visible" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsLoading}" Value="True">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </ScrollViewer.Style>
-                        <StackPanel Orientation="Vertical">
-
-                            <!-- Pinned section: visible only when there are pinned cards -->
-                            <StackPanel Orientation="Vertical">
-                                <StackPanel.Style>
-                                    <Style TargetType="StackPanel">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding HasPinnedCards}" Value="True">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </StackPanel.Style>
-                                <TextBlock Text="📌 Pinned"
-                                           FontSize="10.5" FontWeight="SemiBold"
-                                           Foreground="#6B7280"
-                                           Margin="0,0,0,8" />
-                                <ItemsControl x:Name="PinnedItemsControl" ItemsSource="{Binding PinnedCards}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel Orientation="Vertical" />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate DataType="{x:Type vm:ClipCardViewModel}">
-                                            <controls:ClipCard Margin="0,0,0,8" />
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-
-                            <!-- Section divider: visible when both sections have cards -->
-                            <Rectangle Height="1" Fill="#E5E7EB" Margin="0,4,0,12">
-                                <Rectangle.Style>
-                                    <Style TargetType="Rectangle">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                        <Style.Triggers>
-                                            <MultiDataTrigger>
-                                                <MultiDataTrigger.Conditions>
-                                                    <Condition Binding="{Binding HasPinnedCards}" Value="True" />
-                                                    <Condition Binding="{Binding HasRegularCards}" Value="True" />
-                                                </MultiDataTrigger.Conditions>
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </MultiDataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Rectangle.Style>
-                            </Rectangle>
-
-                            <!-- Regular (unpinned) cards -->
-                            <ItemsControl x:Name="RegularItemsControl" ItemsSource="{Binding RegularCards}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Vertical" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate DataType="{x:Type vm:ClipCardViewModel}">
-                                        <controls:ClipCard Margin="0,0,0,8" />
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-
-                        </StackPanel>
-                    </ScrollViewer>
-
-                    <!-- Loading state -->
-                    <TextBlock Text="Loading…"
-                               FontSize="14" Foreground="#9CA3AF"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}" />
-
-                    <!-- Empty state: history is empty (nothing ever copied) -->
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <StackPanel.Style>
-                            <Style TargetType="StackPanel">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsHistoryEmpty}" Value="True">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </StackPanel.Style>
-                        <TextBlock Text="📋"
-                                   FontSize="32"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,0,0,12" />
-                        <TextBlock Text="Copy something to see it here"
-                                   FontSize="14" Foreground="#9CA3AF"
-                                   HorizontalAlignment="Center" />
-                    </StackPanel>
-
-                    <!-- Empty state: search/filter returned no results -->
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <StackPanel.Style>
-                            <Style TargetType="StackPanel">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsFilteredEmpty}" Value="True">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </StackPanel.Style>
-                        <TextBlock Text="🔍"
-                                   FontSize="32"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,0,0,12" />
-                        <TextBlock Text="No matching clips"
-                                   FontSize="14" Foreground="#9CA3AF"
-                                   HorizontalAlignment="Center" />
-                    </StackPanel>
-
-                </Grid>
-
-                <!-- Footer separator -->
-                <Rectangle Grid.Row="6" Fill="#F1F5F9" />
-
-                <!-- ── Footer: keyboard hints ── -->
-                <StackPanel Grid.Row="7"
-                            Orientation="Horizontal"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center">
-                    <TextBlock FontSize="11" Foreground="#9CA3AF">
-                        <Run FontWeight="SemiBold" Foreground="#6B7280">↑ ↓</Run>
-                        <Run> Navigate  </Run>
-                        <Run FontWeight="SemiBold" Foreground="#6B7280">Enter</Run>
-                        <Run> Paste  </Run>
-                        <Run FontWeight="SemiBold" Foreground="#6B7280">Ctrl+Enter</Run>
-                        <Run> Copy only  </Run>
-                        <Run FontWeight="SemiBold" Foreground="#6B7280">P</Run>
-                        <Run> Pin  </Run>
-                        <Run FontWeight="SemiBold" Foreground="#6B7280">Ctrl+F</Run>
-                        <Run> Search  </Run>
-                        <Run FontWeight="SemiBold" Foreground="#6B7280">Esc</Run>
-                        <Run> Dismiss</Run>
-                    </TextBlock>
+            <!-- Paused banner -->
+            <Border x:Name="PausedBanner"
+                    Grid.Row="2"
+                    Background="#1FFDE68A"
+                    BorderBrush="#33FDE68A"
+                    BorderThickness="0,1,0,1"
+                    Padding="20,6,20,6"
+                    Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="⏸" FontSize="12" Foreground="#92400E" Margin="0,0,8,0" />
+                    <TextBlock Text="Capture paused — new copies will not be saved"
+                               FontSize="12" Foreground="#92400E" />
                 </StackPanel>
+            </Border>
 
-            </Grid>
-        </Border>
-    </Grid>
+            <!-- Error banner -->
+            <Border x:Name="ErrorBanner"
+                    Grid.Row="3"
+                    Background="#1FFB2020"
+                    BorderBrush="#33FB2020"
+                    BorderThickness="0,1,0,1"
+                    Padding="20,6,20,6"
+                    Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="⚠" FontSize="12" Foreground="#DC2626" Margin="0,0,8,0" />
+                    <TextBlock x:Name="ErrorText" FontSize="12" Foreground="#DC2626" />
+                </StackPanel>
+            </Border>
+
+            <!-- Card row placeholder (replaced in Task 6) -->
+            <ContentPresenter Grid.Row="4" x:Name="CardArea" MinHeight="110" />
+
+            <!-- Separator -->
+            <Rectangle Grid.Row="5" Fill="{DynamicResource SeparatorBrush}" />
+
+            <!-- Keyboard hints footer -->
+            <StackPanel Grid.Row="6" Orientation="Horizontal"
+                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock FontSize="10.5" Foreground="{DynamicResource KbdHintForeground}">
+                    <Run FontWeight="SemiBold" Foreground="{DynamicResource KbdForeground}">← →</Run>
+                    <Run> Navigate  </Run>
+                    <Run FontWeight="SemiBold" Foreground="{DynamicResource KbdForeground}">Enter</Run>
+                    <Run> Paste  </Run>
+                    <Run FontWeight="SemiBold" Foreground="{DynamicResource KbdForeground}">Ctrl+Enter</Run>
+                    <Run> Copy only  </Run>
+                    <Run FontWeight="SemiBold" Foreground="{DynamicResource KbdForeground}">P</Run>
+                    <Run> Pin  </Run>
+                    <Run FontWeight="SemiBold" Foreground="{DynamicResource KbdForeground}">Ctrl+F</Run>
+                    <Run> Search  </Run>
+                    <Run FontWeight="SemiBold" Foreground="{DynamicResource KbdForeground}">Esc</Run>
+                    <Run> Dismiss</Run>
+                </TextBlock>
+            </StackPanel>
+
+        </Grid>
+    </Border>
 </Window>
