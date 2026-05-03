@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using CopyTrail.Helpers;
@@ -50,6 +51,8 @@ public partial class PopupWindow : Window
         Opacity = 0;
         Show();
         Activate();
+
+        ApplyChipStyles();
 
         _isAnimating = true;
         var sb = new Storyboard();
@@ -250,8 +253,139 @@ public partial class PopupWindow : Window
     private void ShowError(string msg) { ErrorText.Text = msg; ErrorBanner.Visibility = Visibility.Visible; }
     private void HideError() { ErrorBanner.Visibility = Visibility.Collapsed; }
 
-    // Stubs — implemented in Task 6 when header/card XAML elements exist
-    private void FocusSearch() { }
-    private bool IsSearchFocused() => false;
-    internal void ScrollSelectedIntoView() { }
+    // ── Chip styling ──────────────────────────────────────────────────────────
+
+    private void ApplyChipStyles()
+    {
+        var filter = ViewModel.SelectedFilter;
+        ApplyChip(ChipBorderAll,    ChipTextAll,    filter == FilterKind.All);
+        ApplyChip(ChipBorderText,   ChipTextText,   filter == FilterKind.Text);
+        ApplyChip(ChipBorderLinks,  ChipTextLinks,  filter == FilterKind.Links);
+        ApplyChip(ChipBorderCode,   ChipTextCode,   filter == FilterKind.Code);
+        ApplyChip(ChipBorderImages, ChipTextImages, filter == FilterKind.Images);
+        ApplyChip(ChipBorderColors, ChipTextColors, filter == FilterKind.Colors);
+        ApplyChip(ChipBorderFiles,  ChipTextFiles,  filter == FilterKind.Files);
+        ApplyChip(ChipBorderPinned, ChipTextPinned, filter == FilterKind.Pinned);
+    }
+
+    private void ApplyChip(Border border, TextBlock text, bool active)
+    {
+        border.Background   = active
+            ? (System.Windows.Media.Brush)FindResource("ChipActiveBackground")
+            : (System.Windows.Media.Brush)FindResource("ChipIdleBackground");
+        border.CornerRadius = new CornerRadius(14);
+        border.Padding      = new Thickness(12, 4, 12, 4);
+        border.Margin       = new Thickness(0, 0, 5, 0);
+
+        text.FontSize   = 11;
+        text.FontWeight = active ? FontWeights.SemiBold : FontWeights.Medium;
+        text.Foreground = active
+            ? (System.Windows.Media.Brush)FindResource("ChipActiveForeground")
+            : (System.Windows.Media.Brush)FindResource("ChipIdleForeground");
+    }
+
+    private void SelectChip(FilterKind kind)
+    {
+        ViewModel.SelectFilter(kind);
+        ApplyChipStyles();
+    }
+
+    private void ChipAll_Click(object s, WinInput.MouseButtonEventArgs e)    => SelectChip(FilterKind.All);
+    private void ChipText_Click(object s, WinInput.MouseButtonEventArgs e)   => SelectChip(FilterKind.Text);
+    private void ChipLinks_Click(object s, WinInput.MouseButtonEventArgs e)  => SelectChip(FilterKind.Links);
+    private void ChipCode_Click(object s, WinInput.MouseButtonEventArgs e)   => SelectChip(FilterKind.Code);
+    private void ChipImages_Click(object s, WinInput.MouseButtonEventArgs e) => SelectChip(FilterKind.Images);
+    private void ChipColors_Click(object s, WinInput.MouseButtonEventArgs e) => SelectChip(FilterKind.Colors);
+    private void ChipFiles_Click(object s, WinInput.MouseButtonEventArgs e)  => SelectChip(FilterKind.Files);
+    private void ChipPinned_Click(object s, WinInput.MouseButtonEventArgs e) => SelectChip(FilterKind.Pinned);
+
+    // ── Search ────────────────────────────────────────────────────────────────
+
+    private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        SearchPlaceholder.Visibility = string.IsNullOrEmpty(SearchBox.Text)
+            ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void SearchClearButton_Click(object sender, RoutedEventArgs e)
+    {
+        SearchBox.Clear();
+        SearchBox.Focus();
+    }
+
+    private void FocusSearch() => SearchBox.Focus();
+    private bool IsSearchFocused() => SearchBox.IsFocused;
+
+    // ── Settings button ───────────────────────────────────────────────────────
+
+    private void SettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        App.OpenSettings();
+    }
+
+    // ── Horizontal scroll ─────────────────────────────────────────────────────
+
+    private void CardsScrollViewer_PreviewMouseWheel(object sender, WinInput.MouseWheelEventArgs e)
+    {
+        CardsScrollViewer.ScrollToHorizontalOffset(
+            CardsScrollViewer.HorizontalOffset - e.Delta);
+        e.Handled = true;
+    }
+
+    private void CardsScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+    {
+        ScrollLeftBtn.Visibility  = CardsScrollViewer.HorizontalOffset > 0
+            ? Visibility.Visible : Visibility.Collapsed;
+        ScrollRightBtn.Visibility =
+            CardsScrollViewer.HorizontalOffset < CardsScrollViewer.ScrollableWidth
+            ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private const double CardScrollStep = 176;
+
+    private void ScrollLeft_Click(object sender, RoutedEventArgs e)
+        => CardsScrollViewer.ScrollToHorizontalOffset(
+            CardsScrollViewer.HorizontalOffset - CardScrollStep);
+
+    private void ScrollRight_Click(object sender, RoutedEventArgs e)
+        => CardsScrollViewer.ScrollToHorizontalOffset(
+            CardsScrollViewer.HorizontalOffset + CardScrollStep);
+
+    // ── Scroll selected card into view ────────────────────────────────────────
+
+    internal void ScrollSelectedIntoView()
+    {
+        var vm = ViewModel.SelectedCard;
+        if (vm is null) return;
+
+        var container = TryGetContainer(PinnedItemsControl, vm)
+                     ?? TryGetContainer(RegularItemsControl, vm);
+        if (container is null) return;
+
+        var transform = container.TransformToAncestor(CardsPanel);
+        var pos = transform.Transform(new System.Windows.Point(0, 0));
+
+        double cardLeft  = pos.X;
+        double cardRight = cardLeft + container.ActualWidth;
+        double viewLeft  = CardsScrollViewer.HorizontalOffset + 20;
+        double viewRight = viewLeft + CardsScrollViewer.ViewportWidth - 40;
+
+        if (cardLeft < viewLeft)
+            AnimateScroll(cardLeft - 20);
+        else if (cardRight > viewRight)
+            AnimateScroll(CardsScrollViewer.HorizontalOffset + (cardRight - viewRight) + 20);
+    }
+
+    private void AnimateScroll(double targetOffset)
+    {
+        var anim = new DoubleAnimation(
+            CardsScrollViewer.HorizontalOffset,
+            targetOffset,
+            new Duration(TimeSpan.FromMilliseconds(150)))
+        { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
+        CardsScrollViewer.BeginAnimation(ScrollViewerHelper.HorizontalOffsetProperty, anim);
+    }
+
+    private static FrameworkElement? TryGetContainer(ItemsControl ic, object item)
+        => ic.ItemContainerGenerator.ContainerFromItem(item) as FrameworkElement;
 }

@@ -49,8 +49,139 @@
                     Width="32" Height="3" CornerRadius="1.5"
                     Background="{DynamicResource HandleBrush}" />
 
-            <!-- Header placeholder (replaced in Task 6) -->
-            <ContentPresenter Grid.Row="1" x:Name="HeaderArea" />
+            <!-- ── Header ── -->
+            <Grid Grid.Row="1" Margin="20,0,16,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Logo -->
+                <Border Grid.Column="0" Width="26" Height="26" CornerRadius="6"
+                        Margin="0,0,12,0" VerticalAlignment="Center">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#6366F1" Offset="0"/>
+                            <GradientStop Color="#818CF8" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <TextBlock Text="CT" FontSize="9" FontWeight="Bold" Foreground="White"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+
+                <!-- Search box -->
+                <Border Grid.Column="1" CornerRadius="8"
+                        Background="{DynamicResource SearchBackground}"
+                        BorderBrush="{DynamicResource SearchBorder}"
+                        BorderThickness="1" Padding="10,0,8,0"
+                        VerticalAlignment="Center" Height="32">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="⌕" FontSize="14"
+                                   Foreground="{DynamicResource SearchIcon}"
+                                   VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <Grid Grid.Column="1">
+                            <TextBlock x:Name="SearchPlaceholder"
+                                       Text="Search clipboard history…" FontSize="12.5"
+                                       Foreground="{DynamicResource SearchPlaceholder}"
+                                       VerticalAlignment="Center" IsHitTestVisible="False" />
+                            <TextBox x:Name="SearchBox"
+                                     Background="Transparent" BorderThickness="0"
+                                     Foreground="{DynamicResource BodyText}"
+                                     FontSize="12.5" VerticalAlignment="Center"
+                                     CaretBrush="{DynamicResource AccentPrimary}"
+                                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                     TextChanged="SearchBox_TextChanged">
+                                <TextBox.Template>
+                                    <ControlTemplate TargetType="TextBox">
+                                        <ScrollViewer x:Name="PART_ContentHost" Margin="0" Padding="0" />
+                                    </ControlTemplate>
+                                </TextBox.Template>
+                            </TextBox>
+                        </Grid>
+                        <Button Grid.Column="2" x:Name="SearchClearButton" Content="×"
+                                FontSize="15" Background="Transparent" BorderThickness="0"
+                                Foreground="{DynamicResource MetaText}" Padding="4,0"
+                                Cursor="Hand"
+                                Visibility="{Binding HasSearchText, Converter={StaticResource BoolToVis}}"
+                                Click="SearchClearButton_Click" />
+                    </Grid>
+                </Border>
+
+                <!-- Filter chips -->
+                <ScrollViewer Grid.Column="2" HorizontalScrollBarVisibility="Hidden"
+                              VerticalScrollBarVisibility="Disabled"
+                              Margin="10,0,0,0" VerticalAlignment="Center">
+                    <StackPanel x:Name="ChipsPanel" Orientation="Horizontal">
+                        <Border x:Name="ChipBorderAll" Cursor="Hand"
+                                MouseLeftButtonUp="ChipAll_Click">
+                            <TextBlock x:Name="ChipTextAll" Text="All" />
+                        </Border>
+                        <Border x:Name="ChipBorderText" Cursor="Hand"
+                                MouseLeftButtonUp="ChipText_Click">
+                            <TextBlock x:Name="ChipTextText" Text="Text" />
+                        </Border>
+                        <Border x:Name="ChipBorderLinks" Cursor="Hand"
+                                MouseLeftButtonUp="ChipLinks_Click">
+                            <TextBlock x:Name="ChipTextLinks" Text="Links" />
+                        </Border>
+                        <Border x:Name="ChipBorderCode" Cursor="Hand"
+                                MouseLeftButtonUp="ChipCode_Click">
+                            <TextBlock x:Name="ChipTextCode" Text="Code" />
+                        </Border>
+                        <Border x:Name="ChipBorderImages" Cursor="Hand"
+                                MouseLeftButtonUp="ChipImages_Click">
+                            <TextBlock x:Name="ChipTextImages" Text="Images" />
+                        </Border>
+                        <Border x:Name="ChipBorderColors" Cursor="Hand"
+                                MouseLeftButtonUp="ChipColors_Click">
+                            <TextBlock x:Name="ChipTextColors" Text="Colors" />
+                        </Border>
+                        <Border x:Name="ChipBorderFiles" Cursor="Hand"
+                                MouseLeftButtonUp="ChipFiles_Click">
+                            <TextBlock x:Name="ChipTextFiles" Text="Files" />
+                        </Border>
+                        <Border x:Name="ChipBorderPinned" Cursor="Hand"
+                                MouseLeftButtonUp="ChipPinned_Click">
+                            <TextBlock x:Name="ChipTextPinned" Text="📌 Pinned" />
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Settings button -->
+                <Button Grid.Column="3" Margin="8,0,0,0" VerticalAlignment="Center"
+                        Background="Transparent" BorderThickness="0"
+                        Cursor="Hand" ToolTip="Settings" Click="SettingsButton_Click">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="Bd" Background="Transparent" CornerRadius="6" Padding="6">
+                                <TextBlock Text="⚙" FontSize="15"
+                                           Foreground="{DynamicResource MetaText}" />
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="MouseOver">
+                                            <Storyboard>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Bd"
+                                                    Storyboard.TargetProperty="Background">
+                                                    <DiscreteObjectKeyFrame KeyTime="0"
+                                                        Value="{DynamicResource ChipIdleBackground}" />
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </Storyboard>
+                                        </VisualState>
+                                        <VisualState x:Name="Normal" />
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
 
             <!-- Paused banner -->
             <Border x:Name="PausedBanner"
@@ -81,8 +212,136 @@
                 </StackPanel>
             </Border>
 
-            <!-- Card row placeholder (replaced in Task 6) -->
-            <ContentPresenter Grid.Row="4" x:Name="CardArea" MinHeight="110" />
+            <!-- ── Card row ── -->
+            <Grid Grid.Row="4" MinHeight="110">
+
+                <!-- Left scroll arrow -->
+                <Button x:Name="ScrollLeftBtn" HorizontalAlignment="Left" VerticalAlignment="Stretch"
+                        Width="28" Background="{DynamicResource ScrollArrowBackground}"
+                        BorderThickness="0" Cursor="Hand" Panel.ZIndex="10"
+                        Visibility="Collapsed" Click="ScrollLeft_Click">
+                    <TextBlock Text="‹" FontSize="18"
+                               Foreground="{DynamicResource ScrollArrowForeground}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+
+                <!-- Right scroll arrow -->
+                <Button x:Name="ScrollRightBtn" HorizontalAlignment="Right" VerticalAlignment="Stretch"
+                        Width="28" Background="{DynamicResource ScrollArrowBackground}"
+                        BorderThickness="0" Cursor="Hand" Panel.ZIndex="10"
+                        Visibility="Collapsed" Click="ScrollRight_Click">
+                    <TextBlock Text="›" FontSize="18"
+                               Foreground="{DynamicResource ScrollArrowForeground}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+
+                <!-- Main scroll area -->
+                <ScrollViewer x:Name="CardsScrollViewer"
+                              HorizontalScrollBarVisibility="Hidden"
+                              VerticalScrollBarVisibility="Disabled"
+                              Padding="20,12,20,12"
+                              PreviewMouseWheel="CardsScrollViewer_PreviewMouseWheel"
+                              ScrollChanged="CardsScrollViewer_ScrollChanged">
+                    <StackPanel Orientation="Horizontal" x:Name="CardsPanel">
+
+                        <!-- Pinned cards -->
+                        <StackPanel x:Name="PinnedSection" Orientation="Horizontal">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasPinnedCards}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <ItemsControl x:Name="PinnedItemsControl" ItemsSource="{Binding PinnedCards}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type vm:ClipCardViewModel}">
+                                        <controls:ClipCard Margin="0,0,8,0" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <!-- Divider between pinned and regular -->
+                            <Rectangle Width="1" Margin="4,8,12,8"
+                                       Fill="{DynamicResource SeparatorBrush}">
+                                <Rectangle.Style>
+                                    <Style TargetType="Rectangle">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasRegularCards}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Rectangle.Style>
+                            </Rectangle>
+                        </StackPanel>
+
+                        <!-- Regular (unpinned) cards -->
+                        <ItemsControl x:Name="RegularItemsControl" ItemsSource="{Binding RegularCards}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:ClipCardViewModel}">
+                                    <controls:ClipCard Margin="0,0,8,0" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Loading state -->
+                <TextBlock Text="Loading…" FontSize="13"
+                           Foreground="{DynamicResource MetaText}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}" />
+
+                <!-- Empty: no history -->
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsHistoryEmpty}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBlock Text="📋" FontSize="28" HorizontalAlignment="Center" Margin="0,0,0,8" />
+                    <TextBlock Text="Copy something to see it here" FontSize="13"
+                               Foreground="{DynamicResource MetaText}" HorizontalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Empty: filter/search returned nothing -->
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsFilteredEmpty}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBlock Text="🔍" FontSize="28" HorizontalAlignment="Center" Margin="0,0,0,8" />
+                    <TextBlock Text="No matching clips" FontSize="13"
+                               Foreground="{DynamicResource MetaText}" HorizontalAlignment="Center" />
+                </StackPanel>
+
+            </Grid>
 
             <!-- Separator -->
             <Rectangle Grid.Row="5" Fill="{DynamicResource SeparatorBrush}" />
