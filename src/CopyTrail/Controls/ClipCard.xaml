@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:CopyTrail.Controls"
              xmlns:converters="clr-namespace:CopyTrail.Converters"
-             Width="168" Cursor="Hand"
+             Width="280" Height="268" Cursor="Hand"
              MouseEnter="Card_MouseEnter"
              MouseLeave="Card_MouseLeave"
              MouseLeftButtonUp="Card_Click"
@@ -43,12 +43,12 @@
 
         <Grid>
             <Grid.RowDefinitions>
+                <RowDefinition Height="38" />
+                <RowDefinition Height="*" />
                 <RowDefinition Height="36" />
-                <RowDefinition Height="72" />
-                <RowDefinition Height="30" />
             </Grid.RowDefinitions>
 
-            <!-- ── Band ── -->
+            <!-- Band -->
             <Border Grid.Row="0" CornerRadius="11,11,0,0"
                     x:Name="BandBorder"
                     Background="{Binding SoftAccentBrush}">
@@ -67,29 +67,32 @@
 
                     <TextBlock Grid.Column="1"
                                Text="{Binding Source.AppName}"
-                               FontSize="11" FontWeight="SemiBold"
+                               FontSize="13" FontWeight="SemiBold"
                                Foreground="{Binding AccentBrush}"
                                TextTrimming="CharacterEllipsis"
                                VerticalAlignment="Center" />
 
                     <Border Grid.Column="2"
-                            Background="{Binding BadgeBackgroundBrush}"
-                            CornerRadius="5" Padding="6,2,6,2">
+                            Background="#28FFFFFF"
+                            BorderBrush="#40FFFFFF"
+                            BorderThickness="1"
+                            CornerRadius="5" Padding="6,2,6,3"
+                            VerticalAlignment="Center">
                         <TextBlock Text="{Binding ContentKind}"
-                                   FontSize="9" FontWeight="Bold"
-                                   Foreground="{Binding BadgeForegroundBrush}" />
+                                   FontSize="11" FontWeight="Bold"
+                                   Foreground="White" />
                     </Border>
                 </Grid>
             </Border>
 
-            <!-- ── Body ── -->
+            <!-- Body -->
             <Grid Grid.Row="1">
 
                 <!-- Image -->
                 <Border Padding="8,6,8,4"
                         Visibility="{Binding IsImageCard, Converter={StaticResource BoolToVis}}">
                     <Image Source="{Binding ThumbnailPath}"
-                           MaxHeight="60" Stretch="Uniform"
+                           MaxHeight="176" Stretch="Uniform"
                            HorizontalAlignment="Center" VerticalAlignment="Center"
                            RenderOptions.BitmapScalingMode="HighQuality" />
                 </Border>
@@ -101,10 +104,10 @@
                             CornerRadius="5" Padding="7,6">
                         <TextBlock Text="{Binding Preview}"
                                    FontFamily="Cascadia Code, Consolas, Courier New, monospace"
-                                   FontSize="10" LineHeight="15"
+                                   FontSize="12" LineHeight="17"
                                    Foreground="{DynamicResource CodeForeground}"
                                    TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
-                                   MaxHeight="62" />
+                                   MaxHeight="176" />
                     </Border>
                 </Border>
 
@@ -116,7 +119,7 @@
                                 Background="{Binding ColorSwatchBrush}"
                                 HorizontalAlignment="Left" Margin="0,0,0,6"
                                 BorderThickness="1" BorderBrush="{DynamicResource CardBorder}" />
-                        <TextBlock Text="{Binding Preview}" FontSize="11"
+                        <TextBlock Text="{Binding Preview}" FontSize="13"
                                    FontFamily="Cascadia Code, Consolas, monospace"
                                    Foreground="{DynamicResource BodyText}" />
                     </StackPanel>
@@ -127,14 +130,14 @@
                         Visibility="{Binding IsUrlCard, Converter={StaticResource BoolToVis}}">
                     <StackPanel>
                         <TextBlock Text="{Binding UrlDomain}"
-                                   FontSize="12" FontWeight="SemiBold"
+                                   FontSize="14" FontWeight="SemiBold"
                                    Foreground="{Binding AccentBrush}"
                                    TextTrimming="CharacterEllipsis" Margin="0,0,0,4" />
                         <TextBlock Text="{Binding Preview}"
-                                   FontSize="10" FontFamily="Cascadia Code, Consolas, monospace"
+                                   FontSize="12" FontFamily="Cascadia Code, Consolas, monospace"
                                    Foreground="{DynamicResource MetaText}"
                                    TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
-                                   MaxHeight="44" />
+                                   MaxHeight="168" />
                     </StackPanel>
                 </Border>
 
@@ -158,15 +161,15 @@
                             </Style.Triggers>
                         </Style>
                     </Border.Style>
-                    <TextBlock Text="{Binding Preview}" FontSize="11"
+                    <TextBlock Text="{Binding Preview}" FontSize="13"
                                Foreground="{DynamicResource BodyText}"
                                TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
-                               LineHeight="16" MaxHeight="62" />
+                               LineHeight="18" MaxHeight="176" />
                 </Border>
 
             </Grid>
 
-            <!-- ── Default footer ── -->
+            <!-- Default footer -->
             <Border x:Name="DefaultFooter"
                     Grid.Row="2" CornerRadius="0,0,11,11"
                     Background="{DynamicResource FooterBackground}"
@@ -180,11 +183,11 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0"
                                Text="{Binding CopiedAt}"
-                               FontSize="10" VerticalAlignment="Center"
+                               FontSize="12" VerticalAlignment="Center"
                                Foreground="{DynamicResource MetaText}"
                                ToolTip="{Binding CopiedAtAbsolute}" />
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button x:Name="PinButton" Content="⚑" FontSize="12"
+                        <Button x:Name="PinButton" Content="Pin" FontSize="12"
                                 Background="Transparent" BorderThickness="0"
                                 Padding="3,0" Cursor="Hand"
                                 Click="PinButton_Click">
@@ -201,16 +204,22 @@
                                 </Style>
                             </Button.Style>
                         </Button>
-                        <Button Content="⋯" FontSize="13"
+                        <Button Content="..." FontSize="13"
                                 Background="Transparent" BorderThickness="0"
                                 Foreground="{DynamicResource MetaText}"
                                 Padding="3,0" Cursor="Hand"
                                 Click="MenuButton_Click" />
+                        <Button Content="Del"
+                                FontSize="12" Background="Transparent" BorderThickness="0"
+                                Foreground="{DynamicResource DeleteActionForeground}"
+                                Padding="3,0" Cursor="Hand"
+                                ToolTip="Delete"
+                                Click="DeleteBtn_Click" />
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- ── Hover footer ── -->
+            <!-- Hover footer -->
             <Border x:Name="HoverFooter"
                     Grid.Row="2" CornerRadius="0,0,11,11"
                     Background="{DynamicResource FooterHoverBackground}"
@@ -225,31 +234,53 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <Button Grid.Column="0" x:Name="PasteBtn" Content="↵ Paste"
-                            FontSize="11" FontWeight="SemiBold"
+                    <Button Grid.Column="0" x:Name="PasteBtn" Content="Paste"
+                            FontSize="13" FontWeight="SemiBold"
                             Background="Transparent" BorderThickness="0"
                             Foreground="{DynamicResource PasteActionForeground}"
                             Padding="4,3" Cursor="Hand"
                             ToolTip="Paste this item"
                             Click="PasteBtn_Click" />
-                    <Button Grid.Column="1" x:Name="CopyBtn" Content="⎘ Copy"
-                            FontSize="11" Background="Transparent" BorderThickness="0"
+                    <Button Grid.Column="1" x:Name="CopyBtn" Content="Copy"
+                            FontSize="13" Background="Transparent" BorderThickness="0"
                             Foreground="{DynamicResource CopyActionForeground}"
                             Padding="4,3" Cursor="Hand"
                             ToolTip="Copy without pasting"
                             Click="CopyBtn_Click" />
-                    <Button Grid.Column="3" x:Name="DeleteBtn" Content="🗑"
-                            FontSize="11" Background="Transparent" BorderThickness="0"
-                            Foreground="{DynamicResource MetaText}"
-                            Padding="4,3" Cursor="Hand"
-                            ToolTip="Delete"
-                            Click="DeleteBtn_Click"
-                            MouseEnter="DeleteBtn_MouseEnter"
-                            MouseLeave="DeleteBtn_MouseLeave" />
+                    <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Pin" FontSize="12"
+                                Background="Transparent" BorderThickness="0"
+                                Padding="3,0" Cursor="Hand"
+                                Click="PinButton_Click">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Foreground" Value="{DynamicResource PinInactiveForeground}" />
+                                    <Setter Property="ToolTip" Value="Pin" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsPinned}" Value="True">
+                                            <Setter Property="Foreground" Value="{DynamicResource PinActiveForeground}" />
+                                            <Setter Property="ToolTip" Value="Unpin" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <Button Content="..." FontSize="13"
+                                Background="Transparent" BorderThickness="0"
+                                Foreground="{DynamicResource MetaText}"
+                                Padding="3,0" Cursor="Hand"
+                                Click="MenuButton_Click" />
+                        <Button Content="Del"
+                                FontSize="12" Background="Transparent" BorderThickness="0"
+                                Foreground="{DynamicResource DeleteActionForeground}"
+                                Padding="3,0" Cursor="Hand"
+                                ToolTip="Delete"
+                                Click="DeleteBtn_Click" />
+                    </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- ── Selected footer ── -->
+            <!-- Selected footer -->
             <Border x:Name="SelectedFooter"
                     Grid.Row="2" CornerRadius="0,0,11,11"
                     Background="{DynamicResource CardSelectedFooterBackground}"
@@ -262,17 +293,17 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="↵ Enter to paste"
-                               FontSize="10.5" FontWeight="SemiBold"
+                    <TextBlock Grid.Column="0" Text="Enter to paste"
+                               FontSize="12.5" FontWeight="SemiBold"
                                Foreground="{DynamicResource AccentSecondary}"
                                VerticalAlignment="Center" />
                     <TextBlock Grid.Column="1" Text="Ctrl+Enter copy"
-                               FontSize="10" Foreground="{DynamicResource MetaText}"
+                               FontSize="12" Foreground="{DynamicResource MetaText}"
                                VerticalAlignment="Center" />
                 </Grid>
             </Border>
 
-            <!-- ── Delete confirm footer ── -->
+            <!-- Delete confirm footer -->
             <Border x:Name="DeleteConfirmFooter"
                     Grid.Row="2" CornerRadius="0,0,11,11"
                     Background="#CC1C1C1C"
@@ -287,16 +318,16 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="Delete?"
-                               FontSize="10.5" FontWeight="SemiBold"
+                               FontSize="12.5" FontWeight="SemiBold"
                                Foreground="#EF4444"
                                VerticalAlignment="Center" />
                     <Button Grid.Column="1" Content="Yes"
-                            FontSize="10.5" FontWeight="SemiBold"
+                            FontSize="12.5" FontWeight="SemiBold"
                             Background="#3FEF4444" BorderThickness="0"
                             Foreground="#EF4444" Padding="7,3"
                             Cursor="Hand" Click="DeleteConfirmYes_Click" />
                     <Button Grid.Column="2" Content="No"
-                            FontSize="10.5" Background="Transparent" BorderThickness="0"
+                            FontSize="12.5" Background="Transparent" BorderThickness="0"
                             Foreground="{DynamicResource MetaText}" Padding="5,3"
                             Cursor="Hand" Click="DeleteConfirmNo_Click" />
                 </Grid>

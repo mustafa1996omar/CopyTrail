@@ -15,6 +15,7 @@ public partial class PopupWindow : Window
     private bool _isPasting;
     private bool _isAnimating;
     private bool _forceClosing;
+    private DateTime _lastShownAt;
     private const double ShowMs = 240;
     private const double HideMs = 180;
 
@@ -27,10 +28,11 @@ public partial class PopupWindow : Window
 
     public void Initialize()
     {
-        PositionAtScreenBottom();
         Opacity = 0;
-        SlideTransform.Y = Height;
+        SlideTransform.Y = 9999;
         Show();
+        PositionAtScreenBottom();
+        SlideTransform.Y = Height;
         Hide();
     }
 
@@ -45,33 +47,26 @@ public partial class PopupWindow : Window
         HideError();
         _ = ViewModel.LoadAsync();
 
-        PositionAtScreenBottom();
-
         SlideTransform.Y = Height;
         Opacity = 0;
         Show();
+        PositionAtScreenBottom();
         Activate();
 
         ApplyChipStyles();
 
+        _lastShownAt = DateTime.UtcNow;
         _isAnimating = true;
-        var sb = new Storyboard();
 
-        var slide = new DoubleAnimation(SlideTransform.Y, 0,
+        var slide = new DoubleAnimation(Height, 0,
             new Duration(TimeSpan.FromMilliseconds(ShowMs)))
         { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
-        Storyboard.SetTarget(slide, SlideTransform);
-        Storyboard.SetTargetProperty(slide, new PropertyPath(TranslateTransform.YProperty));
-        sb.Children.Add(slide);
+        slide.Completed += (_, _) => _isAnimating = false;
+        SlideTransform.BeginAnimation(TranslateTransform.YProperty, slide);
 
         var fade = new DoubleAnimation(0, 1,
             new Duration(TimeSpan.FromMilliseconds(80)));
-        Storyboard.SetTarget(fade, this);
-        Storyboard.SetTargetProperty(fade, new PropertyPath(OpacityProperty));
-        sb.Children.Add(fade);
-
-        sb.Completed += (_, _) => _isAnimating = false;
-        sb.Begin();
+        this.BeginAnimation(OpacityProperty, fade);
     }
 
     public void AnimatedHide(Action? onComplete = null)
@@ -79,29 +74,21 @@ public partial class PopupWindow : Window
         if (_isAnimating) return;
         _isAnimating = true;
 
-        var sb = new Storyboard();
-
         var slide = new DoubleAnimation(0, Height,
             new Duration(TimeSpan.FromMilliseconds(HideMs)))
         { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn } };
-        Storyboard.SetTarget(slide, SlideTransform);
-        Storyboard.SetTargetProperty(slide, new PropertyPath(TranslateTransform.YProperty));
-        sb.Children.Add(slide);
-
-        var fade = new DoubleAnimation(1, 0,
-            new Duration(TimeSpan.FromMilliseconds(60)))
-        { BeginTime = TimeSpan.FromMilliseconds(120) };
-        Storyboard.SetTarget(fade, this);
-        Storyboard.SetTargetProperty(fade, new PropertyPath(OpacityProperty));
-        sb.Children.Add(fade);
-
-        sb.Completed += (_, _) =>
+        slide.Completed += (_, _) =>
         {
             _isAnimating = false;
             Hide();
             onComplete?.Invoke();
         };
-        sb.Begin();
+        SlideTransform.BeginAnimation(TranslateTransform.YProperty, slide);
+
+        var fade = new DoubleAnimation(1, 0,
+            new Duration(TimeSpan.FromMilliseconds(60)))
+        { BeginTime = TimeSpan.FromMilliseconds(120) };
+        this.BeginAnimation(OpacityProperty, fade);
     }
 
     public void ForceClose()
@@ -147,7 +134,7 @@ public partial class PopupWindow : Window
         if (_isPasting || _forceClosing) return;
         Dispatcher.BeginInvoke(() =>
         {
-            if (!IsActive && IsVisible)
+            if (!IsActive && IsVisible && (DateTime.UtcNow - _lastShownAt).TotalMilliseconds > 500)
                 AnimatedHide();
         }, System.Windows.Threading.DispatcherPriority.Background);
     }

@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:CopyTrail.ViewModels"
         Title="CopyTrail Settings"
+        Icon="pack://application:,,,/Resources/Icons/AppIcon.png"
         Width="560"
         SizeToContent="Height"
         MaxHeight="780"

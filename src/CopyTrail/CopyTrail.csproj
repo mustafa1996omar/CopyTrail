@@ -32,4 +32,9 @@
     <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Resource Include="Resources\Icons\AppIcon.png" />
+    <EmbeddedResource Include="Resources\Icons\AppIcon.png" />
+  </ItemGroup>
+
 </Project>

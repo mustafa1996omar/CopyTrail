@@ -193,21 +193,21 @@ public sealed class ClipCardViewModel : INotifyPropertyChanged
 
     private static (string bg, string fg) GetBadgeColors(ClipboardItemKind kind) => kind switch
     {
-        ClipboardItemKind.Text => ("#F3F4F6", "#374151"),
-        ClipboardItemKind.RichText => ("#CCFBF1", "#0F766E"),
-        ClipboardItemKind.Html => ("#FED7AA", "#C2410C"),
-        ClipboardItemKind.Markdown => ("#EDE9FE", "#5B21B6"),
-        ClipboardItemKind.Url => ("#DBEAFE", "#1E40AF"),
-        ClipboardItemKind.Image => ("#E0E7FF", "#3730A3"),
-        ClipboardItemKind.Screenshot => ("#F1F5F9", "#334155"),
-        ClipboardItemKind.Code => ("#D1FAE5", "#065F46"),
-        ClipboardItemKind.Json => ("#FEF3C7", "#92400E"),
-        ClipboardItemKind.TerminalCommand => ("#F3F4F6", "#111827"),
-        ClipboardItemKind.ColorValue => ("#F5F3FF", "#4C1D95"),
-        ClipboardItemKind.Svg => ("#FCE7F3", "#9D174D"),
-        ClipboardItemKind.FileReference => ("#F5F5F4", "#57534E"),
-        ClipboardItemKind.WordContent => ("#EAF1FB", "#1A3666"),
-        ClipboardItemKind.PdfText => ("#FEE2E2", "#991B1B"),
-        _ => ("#F9FAFB", "#6B7280")
+        ClipboardItemKind.Text => ("#26A1A1AA", "#D1D5DB"),
+        ClipboardItemKind.RichText => ("#260F766E", "#5EEAD4"),
+        ClipboardItemKind.Html => ("#26C2410C", "#FED7AA"),
+        ClipboardItemKind.Markdown => ("#265B21B6", "#C4B5FD"),
+        ClipboardItemKind.Url => ("#261E40AF", "#93C5FD"),
+        ClipboardItemKind.Image => ("#263730A3", "#A5B4FC"),
+        ClipboardItemKind.Screenshot => ("#26334155", "#94A3B8"),
+        ClipboardItemKind.Code => ("#26065F46", "#6EE7B7"),
+        ClipboardItemKind.Json => ("#2692400E", "#FCD34D"),
+        ClipboardItemKind.TerminalCommand => ("#26111827", "#D1D5DB"),
+        ClipboardItemKind.ColorValue => ("#264C1D95", "#DDD6FE"),
+        ClipboardItemKind.Svg => ("#269D174D", "#FBCFE8"),
+        ClipboardItemKind.FileReference => ("#2657534E", "#D6D3D1"),
+        ClipboardItemKind.WordContent => ("#261A3666", "#BFDBFE"),
+        ClipboardItemKind.PdfText => ("#26991B1B", "#FCA5A5"),
+        _ => ("#26374151", "#9CA3AF")
     };
 }

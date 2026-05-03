@@ -5,6 +5,7 @@
         xmlns:converters="clr-namespace:CopyTrail.Converters"
         xmlns:vm="clr-namespace:CopyTrail.ViewModels"
         Title="CopyTrail"
+        Icon="pack://application:,,,/Resources/Icons/AppIcon.png"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -12,7 +13,7 @@
         Topmost="True"
         ResizeMode="NoResize"
         WindowStartupLocation="Manual"
-        Width="800" Height="240"
+        Width="860" Height="390"
         Opacity="0"
         SizeToContent="Manual">
 
@@ -213,7 +214,7 @@
             </Border>
 
             <!-- ── Card row ── -->
-            <Grid Grid.Row="4" MinHeight="110">
+            <Grid Grid.Row="4" MinHeight="180">
 
                 <!-- Left scroll arrow -->
                 <Button x:Name="ScrollLeftBtn" HorizontalAlignment="Left" VerticalAlignment="Stretch"

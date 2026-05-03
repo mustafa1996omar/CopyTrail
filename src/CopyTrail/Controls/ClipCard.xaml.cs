@@ -148,12 +148,6 @@ public partial class ClipCard : WpfUserControl
         SyncFooterState();
     }
 
-    private void DeleteBtn_MouseEnter(object sender, WpfMouseEventArgs e)
-        => DeleteBtn.Foreground = (WpfBrush)FindResource("DeleteActionForeground");
-
-    private void DeleteBtn_MouseLeave(object sender, WpfMouseEventArgs e)
-        => DeleteBtn.Foreground = (WpfBrush)FindResource("MetaText");
-
     private void DeleteConfirmYes_Click(object sender, RoutedEventArgs e)
     {
         e.Handled = true;

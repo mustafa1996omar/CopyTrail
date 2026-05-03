@@ -22,7 +22,7 @@ internal sealed class TrayService : IDisposable
         {
             Text = "CopyTrail — Capture active",
             Visible = true,
-            Icon = CreatePlaceholderIcon()
+            Icon = LoadAppIcon()
         };
 
         var pauseUntilItem = new ToolStripMenuItem("Until resumed", null, OnPauseCaptureClicked);
@@ -58,6 +58,17 @@ internal sealed class TrayService : IDisposable
         _notifyIcon.Text = paused
             ? "CopyTrail — Capture paused"
             : "CopyTrail — Capture active";
+    }
+
+    private static Icon LoadAppIcon()
+    {
+        var asm = System.Reflection.Assembly.GetExecutingAssembly();
+        using var stream = asm.GetManifestResourceStream("CopyTrail.Resources.Icons.AppIcon.png");
+        if (stream is null)
+            return CreatePlaceholderIcon();
+        using var bmp = new Bitmap(stream);
+        var handle = bmp.GetHicon();
+        return Icon.FromHandle(handle);
     }
 
     private static Icon CreatePlaceholderIcon()
