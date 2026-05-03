@@ -114,6 +114,7 @@ public partial class ClipCard : WpfUserControl
 
     private void PasteBtn_Click(object sender, RoutedEventArgs e)
     {
+        e.Handled = true;
         if (Vm is null) return;
         GetParentPopup()?.RequestPaste(Vm);
     }
