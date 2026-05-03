@@ -15,6 +15,8 @@ namespace CopyTrail.Views;
 
 public partial class SettingsWindow
 {
+    private bool _initializing = true;
+
     public SettingsWindow()
     {
         InitializeComponent();
@@ -25,6 +27,7 @@ public partial class SettingsWindow
             AppTheme.Light => 2,
             _              => 0
         };
+        _initializing = false;
     }
 
     private SettingsViewModel ViewModel => (SettingsViewModel)DataContext;
@@ -201,6 +204,7 @@ public partial class SettingsWindow
 
     private void ThemeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (_initializing) return;
         App.SettingsService.Current.Theme = ThemeComboBox.SelectedIndex switch
         {
             1 => AppTheme.Dark,
