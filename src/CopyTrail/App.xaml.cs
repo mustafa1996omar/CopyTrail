@@ -149,6 +149,10 @@ public partial class App
         {
             var previousWindow = _hotkeyService?.LastForegroundWindow ?? IntPtr.Zero;
             _popupWindow = new PopupWindow(previousWindow);
+            // Force layout so ActualHeight is available for animation offset
+            _popupWindow.Measure(new System.Windows.Size(
+                SystemParameters.PrimaryScreenWidth, double.PositiveInfinity));
+            _popupWindow.Arrange(new System.Windows.Rect(_popupWindow.DesiredSize));
             _popupWindow.Initialize();
         }
         else

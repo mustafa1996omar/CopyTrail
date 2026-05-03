@@ -205,12 +205,14 @@ public partial class SettingsWindow
     private void ThemeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_initializing) return;
-        App.SettingsService.Current.Theme = ThemeComboBox.SelectedIndex switch
+        var theme = ThemeComboBox.SelectedIndex switch
         {
             1 => AppTheme.Dark,
             2 => AppTheme.Light,
             _ => AppTheme.System
         };
+        App.SettingsService.Current.Theme = theme;
+        ViewModel.Theme = theme;
         App.ApplyTheme();
     }
 }
