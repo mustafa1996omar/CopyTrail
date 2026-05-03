@@ -1,0 +1,79 @@
+name: Windows Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Windows executable
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Resolve package version
+        shell: pwsh
+        run: |
+          [xml]$project = Get-Content "src/CopyTrail/CopyTrail.csproj"
+          $version = $project.Project.PropertyGroup.Version
+
+          if ("${{ github.ref_type }}" -eq "tag") {
+            $version = "${{ github.ref_name }}".TrimStart("v")
+          }
+
+          "APP_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "ZIP_NAME=CopyTrail-v$version-win-x64.zip" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Restore dependencies
+        run: dotnet restore CopyTrail.sln
+
+      - name: Build
+        run: dotnet build CopyTrail.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test CopyTrail.sln --configuration Release --no-build --verbosity normal
+
+      - name: Publish self-contained executable
+        run: >
+          dotnet publish src/CopyTrail/CopyTrail.csproj
+          --configuration Release
+          --runtime win-x64
+          --self-contained true
+          --no-build
+          --output publish
+          /p:Version=${{ env.APP_VERSION }}
+          /p:PublishSingleFile=true
+          /p:PublishReadyToRun=true
+          /p:IncludeNativeLibrariesForSelfExtract=true
+
+      - name: Zip published app
+        shell: pwsh
+        run: Compress-Archive -Path publish/* -DestinationPath $env:ZIP_NAME -Force
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CopyTrail-win-x64
+          path: ${{ env.ZIP_NAME }}
+          if-no-files-found: error
+
+      - name: Create GitHub release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ZIP_NAME }}
+          generate_release_notes: true
