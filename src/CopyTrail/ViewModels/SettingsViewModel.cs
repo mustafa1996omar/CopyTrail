@@ -18,6 +18,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     private int _rapidDuplicateWindowSeconds;
     private int _maxHistoryCount;
     private int _maxStorageGb;
+    private AppTheme _theme;
 
     public ObservableCollection<string> ExcludedProcessNames { get; } = [];
 
@@ -32,6 +33,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         _rapidDuplicateWindowSeconds = settings.RapidDuplicateWindowSeconds;
         _maxHistoryCount = settings.MaxHistoryCount;
         _maxStorageGb = BytesToGb(settings.MaxStorageBytes);
+        _theme = settings.Theme;
         foreach (var name in settings.ExcludedProcessNames)
             ExcludedProcessNames.Add(name);
     }
@@ -90,6 +92,12 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         set { _maxStorageGb = value; Notify(); }
     }
 
+    public AppTheme Theme
+    {
+        get => _theme;
+        set { _theme = value; Notify(); }
+    }
+
     public void ApplyTo(AppSettings settings)
     {
         settings.OpenPopupShortcut = _openPopupShortcut;
@@ -101,6 +109,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         settings.RapidDuplicateWindowSeconds = _rapidDuplicateWindowSeconds;
         settings.MaxHistoryCount = _maxHistoryCount;
         settings.MaxStorageBytes = GbToBytes(_maxStorageGb);
+        settings.Theme = _theme;
         settings.ExcludedProcessNames.Clear();
         foreach (var name in ExcludedProcessNames)
             settings.ExcludedProcessNames.Add(name);
@@ -117,6 +126,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         RapidDuplicateWindowSeconds = settings.RapidDuplicateWindowSeconds;
         MaxHistoryCount = settings.MaxHistoryCount;
         MaxStorageGb = BytesToGb(settings.MaxStorageBytes);
+        Theme = settings.Theme;
         ExcludedProcessNames.Clear();
         foreach (var name in settings.ExcludedProcessNames)
             ExcludedProcessNames.Add(name);

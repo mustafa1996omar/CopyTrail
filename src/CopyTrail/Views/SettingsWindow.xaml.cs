@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
+using CopyTrail.Models;
 using CopyTrail.Services;
 using CopyTrail.ViewModels;
 using WpfMessageBox = System.Windows.MessageBox;
@@ -17,6 +19,12 @@ public partial class SettingsWindow
     {
         InitializeComponent();
         DataContext = new SettingsViewModel(App.SettingsService.Current);
+        ThemeComboBox.SelectedIndex = App.SettingsService.Current.Theme switch
+        {
+            AppTheme.Dark  => 1,
+            AppTheme.Light => 2,
+            _              => 0
+        };
     }
 
     private SettingsViewModel ViewModel => (SettingsViewModel)DataContext;
@@ -189,5 +197,16 @@ public partial class SettingsWindow
     {
         if (ExclusionListBox.SelectedItem is string selected)
             ViewModel.ExcludedProcessNames.Remove(selected);
+    }
+
+    private void ThemeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        App.SettingsService.Current.Theme = ThemeComboBox.SelectedIndex switch
+        {
+            1 => AppTheme.Dark,
+            2 => AppTheme.Light,
+            _ => AppTheme.System
+        };
+        App.ApplyTheme();
     }
 }

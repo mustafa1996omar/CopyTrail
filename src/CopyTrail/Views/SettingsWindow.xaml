@@ -58,14 +58,14 @@
         <Style x:Key="SectionHeaderStyle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="11" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="#9CA3AF" />
+            <Setter Property="Foreground" Value="{DynamicResource SectionHeaderForeground}" />
             <Setter Property="Margin" Value="0,20,0,8" />
         </Style>
 
         <!-- Row container inside a section -->
         <Style x:Key="SettingRowStyle" TargetType="Border">
             <Setter Property="Padding" Value="16,13,16,13" />
-            <Setter Property="Background" Value="#FAFAFA" />
+            <Setter Property="Background" Value="{DynamicResource SettingRowBackground}" />
             <Setter Property="BorderBrush" Value="#F1F5F9" />
             <Setter Property="BorderThickness" Value="0,0,0,1" />
         </Style>
@@ -73,20 +73,20 @@
         <!-- Last row — no bottom border -->
         <Style x:Key="SettingRowLastStyle" TargetType="Border">
             <Setter Property="Padding" Value="16,13,16,13" />
-            <Setter Property="Background" Value="#FAFAFA" />
+            <Setter Property="Background" Value="{DynamicResource SettingRowBackground}" />
         </Style>
 
         <!-- Setting label -->
         <Style x:Key="SettingLabelStyle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="13.5" />
-            <Setter Property="Foreground" Value="#111827" />
+            <Setter Property="Foreground" Value="{DynamicResource SettingLabelForeground}" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
         <!-- Setting sub-label -->
         <Style x:Key="SettingSubLabelStyle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="11.5" />
-            <Setter Property="Foreground" Value="#9CA3AF" />
+            <Setter Property="Foreground" Value="{DynamicResource SettingSubLabelForeground}" />
             <Setter Property="Margin" Value="0,2,0,0" />
         </Style>
 
@@ -242,7 +242,7 @@
     <!-- Root: transparent with margin for shadow bleed -->
     <Grid Margin="26">
         <Border CornerRadius="16"
-                Background="#FFFFFF"
+                Background="{DynamicResource WindowBackground}"
                 BorderBrush="#E5E7EB"
                 BorderThickness="1">
             <Border.Effect>
@@ -332,6 +332,40 @@
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="24,4,24,16">
+
+                        <!-- ── APPEARANCE ── -->
+                        <TextBlock Text="APPEARANCE"
+                                   Style="{StaticResource SectionHeaderStyle}" />
+
+                        <Border CornerRadius="10"
+                                BorderBrush="{DynamicResource InputBorder}"
+                                BorderThickness="1"
+                                ClipToBounds="True">
+                            <Border Style="{StaticResource SettingRowLastStyle}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Theme"
+                                                   Style="{StaticResource SettingLabelStyle}" />
+                                        <TextBlock Text="System follows your Windows appearance setting"
+                                                   Style="{StaticResource SettingSubLabelStyle}" />
+                                    </StackPanel>
+                                    <ComboBox Grid.Column="1"
+                                              x:Name="ThemeComboBox"
+                                              Width="110"
+                                              SelectedIndex="0"
+                                              VerticalAlignment="Center"
+                                              SelectionChanged="ThemeComboBox_SelectionChanged">
+                                        <ComboBoxItem Content="System" />
+                                        <ComboBoxItem Content="Dark" />
+                                        <ComboBoxItem Content="Light" />
+                                    </ComboBox>
+                                </Grid>
+                            </Border>
+                        </Border>
 
                         <!-- ── KEYBOARD SHORTCUT ── -->
                         <TextBlock Text="KEYBOARD SHORTCUT"
