@@ -18,6 +18,19 @@ public partial class SourceBadge
         set => SetValue(SourceProperty, value);
     }
 
+    public static readonly DependencyProperty ShowNameLabelProperty =
+        DependencyProperty.Register(
+            nameof(ShowNameLabel),
+            typeof(bool),
+            typeof(SourceBadge),
+            new PropertyMetadata(true, OnShowNameLabelChanged));
+
+    public bool ShowNameLabel
+    {
+        get => (bool)GetValue(ShowNameLabelProperty);
+        set => SetValue(ShowNameLabelProperty, value);
+    }
+
     public SourceBadge()
     {
         InitializeComponent();
@@ -27,6 +40,13 @@ public partial class SourceBadge
     {
         if (d is SourceBadge badge && e.NewValue is SourceVisualIdentity identity)
             badge.Apply(identity);
+    }
+
+    private static void OnShowNameLabelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is SourceBadge badge)
+            badge.AppNameText.Visibility = (bool)e.NewValue
+                ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void Apply(SourceVisualIdentity identity)

@@ -61,6 +61,7 @@
 
                     <controls:SourceBadge Grid.Column="0"
                                           Source="{Binding Source}"
+                                          ShowNameLabel="False"
                                           VerticalAlignment="Center"
                                           Margin="0,0,6,0" />
 
