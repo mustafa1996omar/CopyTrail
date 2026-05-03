@@ -1,175 +1,218 @@
-﻿using System.ComponentModel;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Media.Effects;
-using WinInput = System.Windows.Input;
-using WpfContextMenu = System.Windows.Controls.ContextMenu;
-using WpfMenuItem = System.Windows.Controls.MenuItem;
+using System.Windows.Media.Animation;
 using CopyTrail.ViewModels;
-using CopyTrail.Views;
+using WpfBrush = System.Windows.Media.Brush;
+using WpfUserControl = System.Windows.Controls.UserControl;
+using WpfMouseEventArgs = System.Windows.Input.MouseEventArgs;
+using WpfMouseButtonEventArgs = System.Windows.Input.MouseButtonEventArgs;
+using WpfMenuItem = System.Windows.Controls.MenuItem;
+using WpfContextMenu = System.Windows.Controls.ContextMenu;
+using WpfSeparator = System.Windows.Controls.Separator;
 
 namespace CopyTrail.Controls;
 
-public partial class ClipCard
+public partial class ClipCard : WpfUserControl
 {
-    private static readonly SolidColorBrush DefaultBorder =
-        new(Color.FromRgb(0xE5, 0xE7, 0xEB));
+    private ClipCardViewModel? Vm => DataContext as ClipCardViewModel;
 
     public ClipCard()
     {
         InitializeComponent();
-        DataContextChanged += OnDataContextChanged;
+        DataContextChanged += (_, _) => SyncFooterState();
     }
 
-    private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+    private void Card_Loaded(object sender, RoutedEventArgs e)
     {
-        if (e.OldValue is ClipCardViewModel oldVm)
-            oldVm.PropertyChanged -= OnViewModelPropertyChanged;
-        if (e.NewValue is ClipCardViewModel newVm)
-            newVm.PropertyChanged += OnViewModelPropertyChanged;
+        SyncFooterState();
+        if (DataContext is ClipCardViewModel vm)
+            vm.PropertyChanged += (_, args) =>
+            {
+                if (args.PropertyName == nameof(ClipCardViewModel.IsSelected))
+                    SyncFooterState();
+            };
     }
 
-    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    // ── Footer state machine ──────────────────────────────────────────────
+
+    private enum FooterState { Default, Hover, Selected, DeleteConfirm }
+    private FooterState _footerState = FooterState.Default;
+    private bool _isMouseOver;
+
+    private void SyncFooterState()
     {
-        if (e.PropertyName == nameof(ClipCardViewModel.IsSelected))
-            ApplySelectionVisual();
+        if (Vm is null) return;
+
+        if (_footerState == FooterState.DeleteConfirm)
+        {
+            Show(DeleteConfirmFooter);
+            Hide(DefaultFooter, HoverFooter, SelectedFooter);
+            return;
+        }
+
+        if (Vm.IsSelected)
+        {
+            Show(SelectedFooter);
+            Hide(DefaultFooter, HoverFooter, DeleteConfirmFooter);
+        }
+        else if (_isMouseOver)
+        {
+            Show(HoverFooter);
+            Hide(DefaultFooter, SelectedFooter, DeleteConfirmFooter);
+        }
+        else
+        {
+            Show(DefaultFooter);
+            Hide(HoverFooter, SelectedFooter, DeleteConfirmFooter);
+        }
+    }
+
+    private static void Show(UIElement el) => el.Visibility = Visibility.Visible;
+    private static void Hide(params UIElement[] els)
+    {
+        foreach (var el in els) el.Visibility = Visibility.Collapsed;
+    }
+
+    // ── Mouse hover ───────────────────────────────────────────────────────
+
+    private void Card_MouseEnter(object sender, WpfMouseEventArgs e)
+    {
+        _isMouseOver = true;
+        SyncFooterState();
+        AnimateLift(-3);
+        CardBorder.BorderBrush = (WpfBrush)FindResource("CardHoverBorder");
+    }
+
+    private void Card_MouseLeave(object sender, WpfMouseEventArgs e)
+    {
+        _isMouseOver = false;
+        if (_footerState == FooterState.DeleteConfirm) return;
+        SyncFooterState();
+        AnimateLift(0);
+        CardBorder.BorderBrush = Vm?.IsSelected == true
+            ? (WpfBrush)FindResource("CardSelectedBorder")
+            : (WpfBrush)FindResource("CardBorder");
+    }
+
+    private void AnimateLift(double to)
+    {
+        var anim = new DoubleAnimation(to, new Duration(TimeSpan.FromMilliseconds(120)))
+        { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
+        CardLiftTransform.BeginAnimation(TranslateTransform.YProperty, anim);
+    }
+
+    // ── Click ─────────────────────────────────────────────────────────────
+
+    private void Card_Click(object sender, WpfMouseButtonEventArgs e)
+    {
+        if (e.OriginalSource is Button) return;
+        if (Vm is null) return;
+        GetParentPopup()?.RequestPaste(Vm);
+    }
+
+    // ── Action buttons ────────────────────────────────────────────────────
+
+    private void PasteBtn_Click(object sender, RoutedEventArgs e)
+    {
+        if (Vm is null) return;
+        GetParentPopup()?.RequestPaste(Vm);
+    }
+
+    private void CopyBtn_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        if (Vm is null) return;
+        GetParentPopup()?.RequestCopy(Vm);
     }
 
     private void PinButton_Click(object sender, RoutedEventArgs e)
     {
         e.Handled = true;
-        if (DataContext is not ClipCardViewModel vm) return;
-        var popup = Window.GetWindow(this) as PopupWindow;
-        popup?.RequestTogglePin(vm);
-    }
-
-    private void ApplySelectionVisual()
-    {
-        if (DataContext is not ClipCardViewModel vm) return;
-
-        if (vm.IsSelected)
-        {
-            CardBorder.BorderBrush = vm.AccentBrush;
-            CardBorder.BorderThickness = new Thickness(2);
-            CardBorder.Effect = new DropShadowEffect
-            {
-                BlurRadius = 24,
-                Direction = 270,
-                ShadowDepth = 6,
-                Opacity = 0.18,
-                Color = vm.AccentBrush.Color,
-            };
-        }
-        else
-        {
-            CardBorder.BorderBrush = DefaultBorder;
-            CardBorder.BorderThickness = new Thickness(1.5);
-            CardBorder.Effect = new DropShadowEffect
-            {
-                BlurRadius = 14,
-                Direction = 270,
-                ShadowDepth = 3,
-                Opacity = 0.08,
-                Color = Colors.Black
-            };
-        }
-    }
-
-    protected override void OnMouseEnter(WinInput.MouseEventArgs e)
-    {
-        base.OnMouseEnter(e);
-        HoverOverlay.Visibility = Visibility.Visible;
-        if (DataContext is ClipCardViewModel vm && !vm.IsSelected)
-        {
-            CardBorder.BorderBrush = vm.AccentBrush;
-            CardBorder.Effect = new DropShadowEffect
-            {
-                BlurRadius = 22,
-                Direction = 270,
-                ShadowDepth = 5,
-                Opacity = 0.13,
-                Color = Colors.Black
-            };
-        }
-    }
-
-    protected override void OnMouseLeave(WinInput.MouseEventArgs e)
-    {
-        base.OnMouseLeave(e);
-        HoverOverlay.Visibility = Visibility.Collapsed;
-        ApplySelectionVisual();
-    }
-
-    protected override void OnMouseLeftButtonUp(WinInput.MouseButtonEventArgs e)
-    {
-        base.OnMouseLeftButtonUp(e);
-        e.Handled = true;
-
-        if (DataContext is not ClipCardViewModel vm) return;
-        var popup = Window.GetWindow(this) as PopupWindow;
-        popup?.RequestPaste(vm);
-    }
-
-    private void PasteActionButton_Click(object sender, RoutedEventArgs e)
-    {
-        e.Handled = true;
-        if (DataContext is not ClipCardViewModel vm) return;
-        var popup = Window.GetWindow(this) as PopupWindow;
-        popup?.RequestPaste(vm);
-    }
-
-    private void CopyActionButton_Click(object sender, RoutedEventArgs e)
-    {
-        e.Handled = true;
-        if (DataContext is not ClipCardViewModel vm) return;
-        var popup = Window.GetWindow(this) as PopupWindow;
-        popup?.RequestCopy(vm);
+        if (Vm is null) return;
+        GetParentPopup()?.RequestTogglePin(Vm);
     }
 
     private void MenuButton_Click(object sender, RoutedEventArgs e)
     {
         e.Handled = true;
-        if (DataContext is not ClipCardViewModel vm) return;
+        ShowContextMenu();
+    }
+
+    // ── Delete ────────────────────────────────────────────────────────────
+
+    private void DeleteBtn_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        _footerState = FooterState.DeleteConfirm;
+        SyncFooterState();
+    }
+
+    private void DeleteBtn_MouseEnter(object sender, WpfMouseEventArgs e)
+        => DeleteBtn.Foreground = (WpfBrush)FindResource("DeleteActionForeground");
+
+    private void DeleteBtn_MouseLeave(object sender, WpfMouseEventArgs e)
+        => DeleteBtn.Foreground = (WpfBrush)FindResource("MetaText");
+
+    private void DeleteConfirmYes_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        _footerState = FooterState.Default;
+        if (Vm is null) return;
+        GetParentPopup()?.RequestDelete(Vm);
+    }
+
+    private void DeleteConfirmNo_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        _footerState = FooterState.Default;
+        _isMouseOver = false;
+        SyncFooterState();
+        AnimateLift(0);
+    }
+
+    // ── Context menu ──────────────────────────────────────────────────────
+
+    private void ShowContextMenu()
+    {
+        if (Vm is null) return;
 
         var menu = new WpfContextMenu();
+        var popup = GetParentPopup();
 
-        var deleteItem = new WpfMenuItem { Header = "Delete" };
-        deleteItem.Click += (_, _) =>
+        menu.Items.Add(MakeMenuItem("↵ Paste", () => popup?.RequestPaste(Vm)));
+        menu.Items.Add(MakeMenuItem("⎘ Copy only", () => popup?.RequestCopy(Vm)));
+        menu.Items.Add(new WpfSeparator());
+        menu.Items.Add(MakeMenuItem(
+            Vm.IsPinned ? "Unpin" : "Pin",
+            () => popup?.RequestTogglePin(Vm)));
+        menu.Items.Add(new WpfSeparator());
+        menu.Items.Add(MakeMenuItem("Delete", () =>
         {
-            var popup = Window.GetWindow(this) as Views.PopupWindow;
-            popup?.RequestDelete(vm);
-        };
-        menu.Items.Add(deleteItem);
+            _footerState = FooterState.DeleteConfirm;
+            SyncFooterState();
+        }));
 
-        menu.Items.Add(new System.Windows.Controls.Separator());
-
-        var ignoreItem = new WpfMenuItem { Header = "Ignore this app next time" };
-        ignoreItem.IsEnabled = !string.IsNullOrWhiteSpace(vm.SourceProcessName);
-        ignoreItem.Click += (_, _) => AddToExclusionList(vm.SourceProcessName!);
-        menu.Items.Add(ignoreItem);
-
-        menu.PlacementTarget = (UIElement)sender;
-        menu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
         menu.IsOpen = true;
     }
 
-    private static void AddToExclusionList(string processName)
+    private static WpfMenuItem MakeMenuItem(string header, Action action)
     {
-        if (string.IsNullOrWhiteSpace(processName)) return;
-
-        var settings = App.Settings;
-        string normalizedNew = StripExe(processName);
-        bool alreadyExcluded = settings.ExcludedProcessNames.Any(
-            e => string.Equals(StripExe(e), normalizedNew, StringComparison.OrdinalIgnoreCase));
-
-        if (!alreadyExcluded)
-        {
-            settings.ExcludedProcessNames.Add(processName);
-            App.SettingsService.Save();
-        }
+        var item = new WpfMenuItem { Header = header };
+        item.Click += (_, _) => action();
+        return item;
     }
 
-    private static string StripExe(string name) =>
-        name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? name[..^4] : name;
+    // ── Helper ────────────────────────────────────────────────────────────
+
+    private Views.PopupWindow? GetParentPopup()
+    {
+        DependencyObject? current = this;
+        while (current is not null)
+        {
+            if (current is Views.PopupWindow pw) return pw;
+            current = VisualTreeHelper.GetParent(current)
+                   ?? LogicalTreeHelper.GetParent(current);
+        }
+        return null;
+    }
 }
