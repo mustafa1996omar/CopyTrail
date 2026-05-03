@@ -65,10 +65,10 @@
 
     <!-- Settings window -->
     <SolidColorBrush x:Key="WindowBackground" Color="#0C0C10" />
-    <SolidColorBrush x:Key="SectionHeaderForeground" Color="#52525B" />
+    <SolidColorBrush x:Key="SectionHeaderForeground" Color="#6B7280" />
     <SolidColorBrush x:Key="SettingRowBackground" Color="#111114" />
-    <SolidColorBrush x:Key="SettingLabelForeground" Color="#F4F4F5" />
-    <SolidColorBrush x:Key="SettingSubLabelForeground" Color="#71717A" />
+    <SolidColorBrush x:Key="SettingLabelForeground" Color="#F9FAFB" />
+    <SolidColorBrush x:Key="SettingSubLabelForeground" Color="#9CA3AF" />
     <SolidColorBrush x:Key="InputBackground" Color="#18181B" />
     <SolidColorBrush x:Key="InputBorder" Color="#3F3F46" />
     <SolidColorBrush x:Key="InputForeground" Color="#F4F4F5" />

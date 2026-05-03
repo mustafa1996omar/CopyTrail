@@ -16,17 +16,14 @@ namespace CopyTrail.Views;
 public partial class SettingsWindow
 {
     private bool _initializing = true;
+    private AppTheme _savedTheme;
 
     public SettingsWindow()
     {
         InitializeComponent();
         DataContext = new SettingsViewModel(App.SettingsService.Current);
-        ThemeComboBox.SelectedIndex = App.SettingsService.Current.Theme switch
-        {
-            AppTheme.Dark  => 1,
-            AppTheme.Light => 2,
-            _              => 0
-        };
+        _savedTheme = App.SettingsService.Current.Theme;
+        SyncThemeComboBox(_savedTheme);
         _initializing = false;
     }
 
@@ -47,18 +44,26 @@ public partial class SettingsWindow
         ViewModel.MaxHistoryCount = maxHistory;
         ViewModel.ApplyTo(App.SettingsService.Current);
         App.SettingsService.Save();
+        _savedTheme = App.SettingsService.Current.Theme;
         StartupService.SetEnabled(App.SettingsService.Current.StartWithWindows);
         Close();
     }
 
     private void CancelButton_Click(object sender, RoutedEventArgs e)
     {
+        RestoreUnsavedTheme();
         Close();
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)
     {
+        RestoreUnsavedTheme();
         Close();
+    }
+
+    private void SettingsWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        RestoreUnsavedTheme();
     }
 
     private void ResetDefaultsButton_Click(object sender, RoutedEventArgs e)
@@ -75,6 +80,9 @@ public partial class SettingsWindow
         App.SettingsService.ResetToDefaults();
         StartupService.SetEnabled(App.SettingsService.Current.StartWithWindows);
         ViewModel.LoadFrom(App.SettingsService.Current);
+        _savedTheme = App.SettingsService.Current.Theme;
+        SyncThemeComboBox(_savedTheme);
+        App.ApplyTheme();
     }
 
     private void ClearHistoryButton_Click(object sender, RoutedEventArgs e)
@@ -213,6 +221,25 @@ public partial class SettingsWindow
         };
         App.SettingsService.Current.Theme = theme;
         ViewModel.Theme = theme;
+        App.ApplyTheme();
+    }
+
+    private void SyncThemeComboBox(AppTheme theme)
+    {
+        ThemeComboBox.SelectedIndex = theme switch
+        {
+            AppTheme.Dark  => 1,
+            AppTheme.Light => 2,
+            _              => 0
+        };
+    }
+
+    private void RestoreUnsavedTheme()
+    {
+        if (App.SettingsService.Current.Theme == _savedTheme) return;
+
+        App.SettingsService.Current.Theme = _savedTheme;
+        ViewModel.Theme = _savedTheme;
         App.ApplyTheme();
     }
 }
